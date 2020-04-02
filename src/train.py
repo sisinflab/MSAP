@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('--verbose', type=int, default=10, help='number of epochs to show the results.')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs.')
+    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs.')
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
