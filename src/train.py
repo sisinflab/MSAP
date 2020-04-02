@@ -2,9 +2,9 @@ import argparse
 import os
 import shutil
 
-from src.dataset.dataset import DataLoader
-from src.recommender.BPRMF import BPRMF
-from src.util.read import read_config
+from dataset.dataset import DataLoader
+from recommender.BPRMF import BPRMF
+from util.read import read_config
 
 
 def parse_args():

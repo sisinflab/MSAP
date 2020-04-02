@@ -1,11 +1,11 @@
 import tensorflow as tf
 import numpy as np
 from time import time
-from src.recommender.Evaluator import Evaluator
+from recommender.Evaluator import Evaluator
 
 np.random.seed(0)
 
-from src.recommender.RecommenderModel import RecommenderModel
+from recommender.RecommenderModel import RecommenderModel
 
 print("TensorFlow version: {}".format(tf.__version__))
 print("Eager execution: {}".format(tf.executing_eagerly()))
