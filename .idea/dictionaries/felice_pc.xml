@@ -3,10 +3,14 @@
     <words>
       <w>adver</w>
       <w>bprmf</w>
+      <w>ckpt</w>
+      <w>cuda</w>
       <w>dataset</w>
+      <w>fgsm</w>
       <w>gowalla</w>
       <w>lastfm</w>
       <w>movielens</w>
+      <w>ndcg</w>
       <w>recommender</w>
       <w>testset</w>
       <w>trainingset</w>

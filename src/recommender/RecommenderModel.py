@@ -3,9 +3,10 @@ Created on April 1, 2020
 Define Recommender Model.
 @author Felice Antonio Merra (felice.merra@poliba.it)
 """
+import tensorflow as tf
 
 
-class RecommenderModel:
+class RecommenderModel(tf.keras.Model):
     """
     This class represents a recommender model.
     You can load a pretrained model by specifying its ckpt path
@@ -18,7 +19,8 @@ class RecommenderModel:
         model_path (str): model path
     """
 
-    def __init__(self, data, path_output_rec_result, path_output_rec_weight):
+    def __init__(self, data, path_output_rec_result, path_output_rec_weight, rec):
+        self.rec = rec
         self.data = data
         self.num_items = data.num_items
         self.num_users = data.num_users
@@ -30,4 +32,3 @@ class RecommenderModel:
 
     def test(self):
         return
-

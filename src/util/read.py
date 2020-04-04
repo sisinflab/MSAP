@@ -2,6 +2,7 @@ import pandas as pd
 import configparser
 import pickle
 import numpy as np
+import os
 
 
 def read_csv(filename):
@@ -14,6 +15,7 @@ def read_csv(filename):
     """
     df = pd.read_csv(filename, index_col=False)
     return df
+
 
 def read_np(filename):
     """
@@ -63,3 +65,24 @@ def load_obj(name):
     """
     with open(name, 'rb') as f:
         return pickle.load(f)
+
+
+def find_checkpoint(dir, restore_epoch, rec):
+    """
+
+    :param dir: directory of the model where we start from the reading.
+    :param restore_epoch: epoch from which we start from.
+    :return: the path
+    """
+    if rec == "amr":
+        # We have to restore from an execution of bprmf
+        dir_stored_models = os.walk('/'.join(dir.split('/')[:-2]))
+        for dir_stored_model in dir_stored_models:
+            if 'bprmf' in dir_stored_model[0]:
+                dir = dir_stored_model[0]
+
+    for r, d, f in os.walk(dir):
+        for file in f:
+            if 'weights-{0}-'.format(restore_epoch) in file:
+                return dir + '/' + file.split('.')[0]
+    return ''

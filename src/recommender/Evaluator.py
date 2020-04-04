@@ -6,6 +6,9 @@ import math
 
 _feed_dict = None
 _dataset = None
+_model = None
+_sess = None
+_K = None
 
 
 def _init_eval_model(data):
@@ -33,6 +36,25 @@ def _evaluate_input(user):
     return user_input, item_input
 
 
+def _eval_by_user(user):
+    # get predictions of data in testing set
+    user_input, item_input = _feed_dicts[user]
+    predictions, _, _ = _model.get_inference(user_input, item_input)
+
+    neg_predict, pos_predict = predictions[:-1], predictions[-1]
+    position = (neg_predict.numpy() >= pos_predict.numpy()).sum()
+
+    # calculate from HR@1 to HR@100, and from NDCG@1 to NDCG@100, AUC
+    hr, ndcg, auc = [], [], []
+    for k in range(1, _K + 1):
+        hr.append(position < k)
+        ndcg.append(math.log(2) / math.log(position + 2) if position < k else 0)
+        auc.append(
+            1 - (position / len(neg_predict)))  # formula: [#(Xui>Xuj) / #(Items)] = [1 - #(Xui<=Xuj) / #(Items)]
+
+    return hr, ndcg, auc
+
+
 class Evaluator:
     def __init__(self, model, data, k):
         """
@@ -50,9 +72,18 @@ class Evaluator:
         Runtime Evaluation of Accuracy Performance (top-k)
         :return:
         """
+        global _model
+        global _K
+        global _dataset
+        global _feed_dicts
+        _dataset = self.data
+        _model = self.model
+        _K = self.k
+        _feed_dicts = self.eval_feed_dicts
+
         res = []
         for user in range(self.model.data.num_users):
-            res.append(self._eval_by_user(user))
+            res.append(_eval_by_user(user))
         return (np.array(res).mean(axis=0)).tolist()
 
     def store_recommendation(self):
@@ -71,20 +102,4 @@ class Evaluator:
                 for i in range(len(top_k)):
                     out.write(str(u) + '\t' + str(i) + '\t' + str(top_k_score[i]) + '\n')
 
-    def _eval_by_user(self, user):
-        # get predictions of data in testing set
-        user_input, item_input = self.eval_feed_dicts[user]
-        predictions, _, _ = self.model.get_inference(user_input, item_input)
 
-        neg_predict, pos_predict = predictions[:-1], predictions[-1]
-        position = (neg_predict.numpy() >= pos_predict.numpy()).sum()
-
-        # calculate from HR@1 to HR@100, and from NDCG@1 to NDCG@100, AUC
-        hr, ndcg, auc = [], [], []
-        for k in range(1, self.k + 1):
-            hr.append(position < k)
-            ndcg.append(math.log(2) / math.log(position + 2) if position < k else 0)
-            auc.append(
-                1 - (position / len(neg_predict)))  # formula: [#(Xui>Xuj) / #(Items)] = [1 - #(Xui<=Xuj) / #(Items)]
-
-        return hr, ndcg, auc
