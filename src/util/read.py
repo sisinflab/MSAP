@@ -79,10 +79,10 @@ def find_checkpoint(dir, restore_epochs, rec):
         dir_stored_models = os.walk('/'.join(dir.split('/')[:-2]))
         for dir_stored_model in dir_stored_models:
             if 'bprmf' in dir_stored_model[0]:
-                dir = dir_stored_model[0]
+                dir = dir_stored_model[0] + '/'
 
     for r, d, f in os.walk(dir):
         for file in f:
             if 'weights-{0}-'.format(restore_epochs) in file:
-                return dir + '/' + file.split('.')[0]
+                return dir + file.split('.')[0]
     return ''

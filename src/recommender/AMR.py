@@ -52,22 +52,32 @@ class AMR(RecommenderModel):
             name='embedding_Q', dtype=tf.dtypes.float32)  # (items, embedding_size)
         self.h = tf.constant(1.0, tf.float32, [self.embedding_size, 1], name="h")
 
+        # Method to create delta locations for the adv. perturbations
+        self.create_delta()
+
         self.optimizer = tf.keras.optimizers.Adagrad(learning_rate=self.learning_rate)
 
-    def get_inference(self, user_input, item_input_pos, delta_P=0, delta_Q=0):
+    def create_delta(self):
+        # These variable are used only during attack phase
+        self.delta_P = tf.Variable(tf.zeros(shape=[self.num_users, self.embedding_size]), dtype=tf.float32,
+                                   trainable=False)
+        self.delta_Q = tf.Variable(tf.zeros(shape=[self.num_items, self.embedding_size]), dtype=tf.float32,
+                                   trainable=False)
+
+    def get_inference(self, user_input, item_input_pos):
         """
         generate prediciton  matric with respect to passed users' and items indices
-        :param user_input:
-        :param item_input_pos:
+        :param user_input: user indices
+        :param item_input_pos: item indices
         :return:
         """
-        self.embedding_p = tf.reduce_sum(tf.nn.embedding_lookup(self.embedding_P + delta_P, user_input), 1)
-        self.embedding_q = tf.reduce_sum(tf.nn.embedding_lookup(self.embedding_Q + delta_Q, item_input_pos), 1)
+        self.embedding_p = tf.reduce_sum(tf.nn.embedding_lookup(self.embedding_P + self.delta_P, user_input), 1)
+        self.embedding_q = tf.reduce_sum(tf.nn.embedding_lookup(self.embedding_Q + self.delta_Q, item_input_pos), 1)
 
         return tf.matmul(self.embedding_p * self.embedding_q,
                          self.h), self.embedding_p, self.embedding_q  # (b, embedding_size) * (embedding_size, 1)
 
-    def fgsm_perturbation(self, user_input, item_input_pos, item_input_neg, batch_idx):
+    def fgsm_perturbation(self, user_input, item_input_pos, item_input_neg, batch_idx=0):
         """
         Evaluate Adversarial Perturbation with FGSM-like Approach
         :param user_input:
@@ -90,16 +100,15 @@ class AMR(RecommenderModel):
 
         grad_P, grad_Q = tape_adv.gradient(loss, [self.embedding_P, self.embedding_Q])
         grad_P, grad_Q = tf.stop_gradient(grad_P), tf.stop_gradient(grad_Q)
-        delta_p = tf.nn.l2_normalize(grad_P, 1) * self.eps
-        delta_q = tf.nn.l2_normalize(grad_Q, 1) * self.eps
-        return delta_p, delta_q
+        self.delta_P = tf.nn.l2_normalize(grad_P, 1) * self.eps
+        self.delta_Q = tf.nn.l2_normalize(grad_Q, 1) * self.eps
 
     def get_full_inference(self):
         """
         Get Full Predictions useful for Full Store of Predictions
         :return: The matrix of predicted values.
         """
-        return tf.matmul(self.embedding_P, tf.transpose(self.embedding_Q))
+        return tf.matmul(self.embedding_P + self.delta_P, tf.transpose(self.embedding_Q + self.delta_Q))
 
     def _train_step(self, batches):
         """
@@ -113,8 +122,6 @@ class AMR(RecommenderModel):
             with tf.GradientTape() as t:
                 t.watch([self.embedding_P, self.embedding_Q])
 
-                delta_p, delta_q = self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
-
                 # Clean Inference
                 self.output_pos, embed_p_pos, embed_q_pos = self.get_inference(user_input[batch_idx],
                                                                                item_input_pos[batch_idx])
@@ -127,11 +134,12 @@ class AMR(RecommenderModel):
                 self.reg_loss = self.reg * tf.reduce_mean(
                     tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
+                self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
+
                 # Adversarial Inference
-                self.output_pos_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx], delta_p,
-                                                           delta_q)
-                self.output_neg_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx], delta_p,
-                                                           delta_q)
+                self.output_pos_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx])
+                self.output_neg_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx])
+
                 self.result_adver = tf.clip_by_value(self.output_pos_adver - self.output_neg_adver, -80.0, 1e8)
                 self.loss_adver = tf.reduce_sum(tf.nn.softplus(-self.result_adver))
 
@@ -140,33 +148,56 @@ class AMR(RecommenderModel):
 
             gradients = t.gradient(self.loss_opt, [self.embedding_P, self.embedding_Q])
             self.optimizer.apply_gradients(zip(gradients, [self.embedding_P, self.embedding_Q]))
+            # Restore Deltas
+            self.create_delta()
 
     def train(self):
 
         saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
 
-        if self.restore_epochs > 1:
-            # Restore the model at the args
-            # saver_ckpt.restore(tf.train.latest_checkpoint(self.path_output_rec_weight))
-            # TODO
-            # We should pass the basic model
-            try:
-                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.rec)
-                saver_ckpt.restore(checkpoint_file)
-            except:
-                self.restore_epochs = 1
-                print("Training from scratch...")
+        if not self.restore():
+            self.restore_epochs = 1
+            print("Training from scratch...")
+
         for epoch in range(self.restore_epochs, self.epochs + 1):
-            start = time()
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)
-
-            results = self.evaluator.eval()
-            hr, ndcg, auc = np.swapaxes(results, 0, 1)[-1]
-            print("Epoch %d\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f [Sec %.2f]" % (epoch, hr, ndcg, auc, time() - start))
-            start = time()
+            self.evaluator.eval()
 
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
 
         self.evaluator.store_recommendation()
+
+    def restore(self):
+        saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
+        if self.restore_epochs > 1:
+            try:
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.rec)
+                saver_ckpt.restore(checkpoint_file)
+                print("Model correctly Restored at Epoch: {0}".format(self.restore_epochs))
+                return True
+            except Exception as ex:
+                print("Error in model restoring operation! {0}".format(ex.message))
+        else:
+            print("Restore Epochs Not Specified")
+        return False
+
+    def attack_full_fgsm(self, attack_eps, attack_name=""):
+        """
+        Create FGSM ATTACK
+        :param attack_eps:
+        :param attack_name:
+        :return:
+        """
+        # Set eps perturbation (budget)
+        self.eps = attack_eps
+        user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
+
+        # Calculate Adversarial Perturbations
+        self.fgsm_perturbation(user_input, item_input_pos, item_input_neg)
+
+        self.evaluator.eval()
+
+        self.evaluator.store_recommendation(attack_name)
+        print('{0} - Completed!'.format(attack_name))

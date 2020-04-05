@@ -20,7 +20,7 @@ def parse_args():
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
-    parser.add_argument('--restore_epochs', type=int, default=1000, help='Default is 1: The restore epochs (Must be lower than the epochs)')
+    parser.add_argument('--restore_epochs', type=int, default=3000, help='Default is 1: The restore epochs (Must be lower than the epochs)')
     parser.add_argument('--eps', type=float, default=0.5, help='Epsilon for adversarial weights.')
     parser.add_argument('--adv_type', nargs='?', default="fgsm", help="fgsm, future work other techniques...")
     parser.add_argument('--adv_reg', type=float, default=0, help='Regularization for adversarial loss')
@@ -51,30 +51,30 @@ def train():
         path_output_rec_result = path_output_rec_result.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
-                                                               'epoch' + str(args.epochs),
+                                                               'ep' + str(args.epochs),
                                                                'XX',
                                                                'XX')
 
         path_output_rec_weight = path_output_rec_weight.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
-                                                               'epoch' + str(args.epochs),
+                                                               'ep' + str(args.epochs),
                                                                'XX',
                                                                'XX')
     elif args.rec == 'amr':
         path_output_rec_result = path_output_rec_result.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
-                                                               'epoch' + str(args.epochs),
+                                                               'ep' + str(args.epochs),
                                                                'eps' + str(args.eps),
-                                                               'att' + args.adv_type)
+                                                               '' + args.adv_type)
 
         path_output_rec_weight = path_output_rec_weight.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
-                                                               'epoch' + str(args.epochs),
+                                                               'ep' + str(args.epochs),
                                                                'eps' + str(args.eps),
-                                                               'att' + args.adv_type)
+                                                               '' + args.adv_type)
 
     # Create directories to Store Results and Rec Models
     manage_directories(path_output_rec_result, path_output_rec_weight)

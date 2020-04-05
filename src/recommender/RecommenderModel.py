@@ -28,7 +28,7 @@ class RecommenderModel(tf.keras.Model):
         self.path_output_rec_weight = path_output_rec_weight
 
     def train(self):
-        return
+        pass
 
-    def test(self):
-        return
+    def restore(self):
+        pass

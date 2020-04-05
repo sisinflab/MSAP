@@ -84,16 +84,20 @@ class Evaluator:
         res = []
         for user in range(self.model.data.num_users):
             res.append(_eval_by_user(user))
-        return (np.array(res).mean(axis=0)).tolist()
 
-    def store_recommendation(self):
+        hr, ndcg, auc = np.swapaxes((np.array(res).mean(axis=0)).tolist(), 0, 1)[-1]
+        print("Novel Performance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (hr, ndcg, auc))
+
+
+    def store_recommendation(self, attack_name=""):
         """
         Store recommendation list (top-k) in order to be used for the ranksys framework (sisinflab)
+        attack_name: The name for the attack stored file
         :return:
         """
         results = self.model.get_full_inference().numpy()
-        with open('{0}/{1}-top-{2}-rec.tsv'.format(self.model.path_output_rec_result,
-                                                   self.model.path_output_rec_result.split('/')[-2], self.k),
+        with open('{0}/{1}-top{2}-rec.tsv'.format(self.model.path_output_rec_result,
+                                                   attack_name + self.model.path_output_rec_result.split('/')[-2], self.k),
                   'w') as out:
             for u in range(results.shape[0]):
                 results[u][self.data.train_list[u]] = -np.inf
