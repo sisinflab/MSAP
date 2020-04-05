@@ -38,7 +38,7 @@ class AMR(RecommenderModel):
         self.epochs = args.epochs
         self.batch_size = args.batch_size
         self.verbose = args.verbose
-        self.restore_epoch = args.restore_epoch
+        self.restore_epochs = args.restore_epochs
         self.evaluator = Evaluator(self, data, args.k)
         self.adv_type = args.adv_type
         self.adv_reg = args.adv_reg
@@ -80,9 +80,9 @@ class AMR(RecommenderModel):
             tape_adv.watch([self.embedding_P, self.embedding_Q])
             # Clean Inference
             output_pos, embed_p_pos, embed_q_pos = self.get_inference(user_input[batch_idx],
-                                                                           item_input_pos[batch_idx])
+                                                                      item_input_pos[batch_idx])
             output_neg, embed_p_neg, embed_q_neg = self.get_inference(user_input[batch_idx],
-                                                                           item_input_neg[batch_idx])
+                                                                      item_input_neg[batch_idx])
             result = tf.clip_by_value(output_pos - output_neg, -80.0, 1e8)
             loss = tf.reduce_sum(tf.nn.softplus(-result))
             loss += self.reg * tf.reduce_mean(
@@ -116,22 +116,27 @@ class AMR(RecommenderModel):
                 delta_p, delta_q = self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
 
                 # Clean Inference
-                self.output_pos, embed_p_pos, embed_q_pos = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx])
-                self.output_neg, embed_p_neg, embed_q_neg = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx])
+                self.output_pos, embed_p_pos, embed_q_pos = self.get_inference(user_input[batch_idx],
+                                                                               item_input_pos[batch_idx])
+                self.output_neg, embed_p_neg, embed_q_neg = self.get_inference(user_input[batch_idx],
+                                                                               item_input_neg[batch_idx])
                 self.result = tf.clip_by_value(self.output_pos - self.output_neg, -80.0, 1e8)
                 self.loss = tf.reduce_sum(tf.nn.softplus(-self.result))
 
                 # Regularization Component
-                self.reg_loss = self.reg * tf.reduce_mean(tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
+                self.reg_loss = self.reg * tf.reduce_mean(
+                    tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
                 # Adversarial Inference
-                self.output_pos_adver = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx], delta_p, delta_q)
-                self.output_neg_adver = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx], delta_p, delta_q)
-                self.result_adver = tf.clip_by_value(self.output_pos - self.output_neg, -80.0, 1e8)
+                self.output_pos_adver = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx], delta_p,
+                                                           delta_q)
+                self.output_neg_adver = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx], delta_p,
+                                                           delta_q)
+                self.result_adver = tf.clip_by_value(self.output_pos_adver - self.output_neg_adver, -80.0, 1e8)
                 self.loss_adver = tf.reduce_sum(tf.nn.softplus(-self.result_adver))
 
                 # Loss to be optimized
-                self.loss_opt = self.loss + self.adv_reg*self.loss_adver + self.reg_loss
+                self.loss_opt = self.loss + self.adv_reg * self.loss_adver + self.reg_loss
 
             gradients = t.gradient(self.loss_opt, [self.embedding_P, self.embedding_Q])
             self.optimizer.apply_gradients(zip(gradients, [self.embedding_P, self.embedding_Q]))
@@ -140,27 +145,28 @@ class AMR(RecommenderModel):
 
         saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
 
-        if self.restore_epoch > 1:
+        if self.restore_epochs > 1:
             # Restore the model at the args
             # saver_ckpt.restore(tf.train.latest_checkpoint(self.path_output_rec_weight))
             # TODO
             # We should pass the basic model
             try:
-                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epoch, self.rec)
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.rec)
                 saver_ckpt.restore(checkpoint_file)
             except:
-                self.restore_epoch = 1
+                self.restore_epochs = 1
                 print("Training from scratch...")
-        for epoch in range(self.restore_epoch, self.epochs + 1):
+        for epoch in range(self.restore_epochs, self.epochs + 1):
             start = time()
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)
 
+            results = self.evaluator.eval()
+            hr, ndcg, auc = np.swapaxes(results, 0, 1)[-1]
+            print("Epoch %d\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f [Sec %.2f]" % (epoch, hr, ndcg, auc, time() - start))
+            start = time()
+
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
-                results = self.evaluator.eval()
-                hr, ndcg, auc = np.swapaxes(results, 0, 1)[-1]
-                print("Epoch %d\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f [Sec %.2f]" % (epoch, hr, ndcg, auc, time() - start))
-                start = time()
 
         self.evaluator.store_recommendation()

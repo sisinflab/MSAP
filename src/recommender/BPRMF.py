@@ -27,7 +27,7 @@ class BPRMF(RecommenderModel):
         self.epochs = args.epochs
         self.batch_size = args.batch_size
         self.verbose = args.verbose
-        self.restore_epoch = args.restore_epoch
+        self.restore_epochs = args.restore_epochs
         self.evaluator = Evaluator(self, data, args.k)
 
         self.embedding_P = tf.Variable(
@@ -75,19 +75,19 @@ class BPRMF(RecommenderModel):
 
         saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
 
-        if self.restore_epoch > 1:
+        if self.restore_epochs > 1:
             # Restore the model at the args
             # saver_ckpt.restore(tf.train.latest_checkpoint(self.path_output_rec_weight))
             # TODO
             # We should pass the basic model
             try:
-                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epoch, self.rec)
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.rec)
                 saver_ckpt.restore(checkpoint_file)
             except:
-                self.restore_epoch = 1
+                self.restore_epochs = 1
                 print("Training from scratch...")
 
-        for epoch in range(self.restore_epoch, self.epochs + 1):
+        for epoch in range(self.restore_epochs, self.epochs + 1):
             start = time()
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)

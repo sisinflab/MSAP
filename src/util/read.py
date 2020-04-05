@@ -67,11 +67,11 @@ def load_obj(name):
         return pickle.load(f)
 
 
-def find_checkpoint(dir, restore_epoch, rec):
+def find_checkpoint(dir, restore_epochs, rec):
     """
 
     :param dir: directory of the model where we start from the reading.
-    :param restore_epoch: epoch from which we start from.
+    :param restore_epochs: epoch from which we start from.
     :return: the path
     """
     if rec == "amr":
@@ -83,6 +83,6 @@ def find_checkpoint(dir, restore_epoch, rec):
 
     for r, d, f in os.walk(dir):
         for file in f:
-            if 'weights-{0}-'.format(restore_epoch) in file:
+            if 'weights-{0}-'.format(restore_epochs) in file:
                 return dir + '/' + file.split('.')[0]
     return ''
