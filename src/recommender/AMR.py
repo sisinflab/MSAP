@@ -128,9 +128,9 @@ class AMR(RecommenderModel):
                     tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
                 # Adversarial Inference
-                self.output_pos_adver = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx], delta_p,
+                self.output_pos_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx], delta_p,
                                                            delta_q)
-                self.output_neg_adver = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx], delta_p,
+                self.output_neg_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_neg[batch_idx], delta_p,
                                                            delta_q)
                 self.result_adver = tf.clip_by_value(self.output_pos_adver - self.output_neg_adver, -80.0, 1e8)
                 self.loss_adver = tf.reduce_sum(tf.nn.softplus(-self.result_adver))
