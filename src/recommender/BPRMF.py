@@ -107,7 +107,7 @@ class BPRMF(RecommenderModel):
                     tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
                 # Loss to be optimized
-                self.loss_opt = self.loss + self.adv_reg * self.loss_adver + self.reg_loss
+                self.loss_opt = self.loss + self.reg_loss
 
             gradients = t.gradient(self.loss_opt, [self.embedding_P, self.embedding_Q])
             self.optimizer.apply_gradients(zip(gradients, [self.embedding_P, self.embedding_Q]))
