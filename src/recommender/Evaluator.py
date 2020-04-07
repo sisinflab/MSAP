@@ -86,7 +86,7 @@ class Evaluator:
             res.append(_eval_by_user(user))
 
         hr, ndcg, auc = np.swapaxes((np.array(res).mean(axis=0)).tolist(), 0, 1)[-1]
-        print("Novel Performance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (hr, ndcg, auc))
+        print("Performance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (hr, ndcg, auc))
 
 
     def store_recommendation(self, attack_name=""):

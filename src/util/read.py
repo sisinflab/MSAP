@@ -67,14 +67,15 @@ def load_obj(name):
         return pickle.load(f)
 
 
-def find_checkpoint(dir, restore_epochs, rec):
+def find_checkpoint(dir, restore_epochs, epochs, rec):
     """
 
     :param dir: directory of the model where we start from the reading.
     :param restore_epochs: epoch from which we start from.
-    :return: the path
+    :param rec: recommender model
+    :return:
     """
-    if rec == "amr":
+    if rec == "amr" and restore_epochs < epochs:
         # We have to restore from an execution of bprmf
         dir_stored_models = os.walk('/'.join(dir.split('/')[:-2]))
         for dir_stored_model in dir_stored_models:
