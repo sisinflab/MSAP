@@ -123,7 +123,8 @@ class BPRMF(RecommenderModel):
         for epoch in range(self.restore_epochs, self.epochs + 1):
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)
-            self.evaluator.eval()
+            epoch_text = 'Epoch {0}/{1} '.format(epoch, self.epochs + 1)
+            self.evaluator.eval(epoch_text)
 
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))

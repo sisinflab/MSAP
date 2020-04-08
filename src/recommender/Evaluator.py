@@ -67,7 +67,7 @@ class Evaluator:
         self.eval_feed_dicts = _init_eval_model(data)
         self.model = model
 
-    def eval(self):
+    def eval(self, epoch_text=''):
         """
         Runtime Evaluation of Accuracy Performance (top-k)
         :return:
@@ -86,7 +86,7 @@ class Evaluator:
             res.append(_eval_by_user(user))
 
         hr, ndcg, auc = np.swapaxes((np.array(res).mean(axis=0)).tolist(), 0, 1)[-1]
-        print("Performance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (hr, ndcg, auc))
+        print("%sPerformance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (epoch_text, hr, ndcg, auc))
 
 
     def store_recommendation(self, attack_name=""):
