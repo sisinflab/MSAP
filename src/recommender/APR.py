@@ -10,6 +10,7 @@ import os
 import logging
 from util.write import save_obj
 from util.read import find_checkpoint
+from copy import deepcopy
 
 np.random.seed(0)
 logging.disable(logging.WARNING)
@@ -34,7 +35,7 @@ class APR(RecommenderModel):
         self.embedding_size = args.embed_size
         self.learning_rate = args.lr
         self.reg = args.reg
-        self.eps = args.eps
+        self.adv_eps = args.adv_eps
         self.epochs = args.epochs
         self.batch_size = args.batch_size
         self.verbose = args.verbose
@@ -42,6 +43,8 @@ class APR(RecommenderModel):
         self.evaluator = Evaluator(self, data, args.k)
         self.adv_type = args.adv_type
         self.adv_reg = args.adv_reg
+        self.adv_iteration = args.adv_iteration
+        self.adv_step_size = args.adv_step_size
         self.best = args.best
 
         # Initialize Model Parameters
@@ -115,8 +118,15 @@ class APR(RecommenderModel):
                 self.reg_loss = self.reg * tf.reduce_mean(
                     tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
-                # Adversaril Training Component
-                self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
+                # Adversarial Training Component
+                if self.adv_type == 'fgsm':
+                    self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
+                elif self.adv_type == 'pgd':
+                    # Set Iterative Parameters
+                    self.adv_eps = self.adv_eps
+                    self.step_size = self.adv_eps / self.adv_step_size
+                    self.iteration = self.adv_iteration
+                    self.iterative_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
 
                 # Adversarial Inference
                 self.output_pos_adver, _, _ = self.get_inference(user_input[batch_idx], item_input_pos[batch_idx])
@@ -128,10 +138,12 @@ class APR(RecommenderModel):
                 # Loss to be optimized
                 self.loss_opt = self.loss + self.adv_reg * self.loss_adver + self.reg_loss
 
+                # Restore Deltas
+                self.set_delta()
+
             gradients = t.gradient(self.loss_opt, [self.embedding_P, self.embedding_Q])
             self.optimizer.apply_gradients(zip(gradients, [self.embedding_P, self.embedding_Q]))
-            # Restore Deltas
-            self.set_delta()
+
 
     def train(self):
 
@@ -159,7 +171,7 @@ class APR(RecommenderModel):
             if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
                 max_hr = results[epoch]['hr'][self.evaluator.k-1]
                 best_epoch = epoch
-                best_model = self
+                best_model = deepcopy(self)
 
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
@@ -220,8 +232,8 @@ class APR(RecommenderModel):
 
         grad_P, grad_Q = tape_adv.gradient(loss, [self.embedding_P, self.embedding_Q])
         grad_P, grad_Q = tf.stop_gradient(grad_P), tf.stop_gradient(grad_Q)
-        self.delta_P = tf.nn.l2_normalize(grad_P, 1) * self.eps
-        self.delta_Q = tf.nn.l2_normalize(grad_Q, 1) * self.eps
+        self.delta_P = tf.nn.l2_normalize(grad_P, 1) * self.adv_eps
+        self.delta_Q = tf.nn.l2_normalize(grad_Q, 1) * self.adv_eps
 
     def iterative_perturbation(self, user_input, item_input_pos, item_input_neg, batch_idx=0):
         """
@@ -260,13 +272,13 @@ class APR(RecommenderModel):
                                                                   list(range(1, len(self.step_delta_P.get_shape()))),
                                                                   keepdims=True)))
             # We must *clip* to within the norm ball, not *normalize* onto the surface of the ball
-            self.factor_P = tf.minimum(1., tf.divide(self.eps, self.norm_P))
+            self.factor_P = tf.minimum(1., tf.divide(self.adv_eps, self.norm_P))
 
             # L2 NORM on Q
             self.norm_Q = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_Q),
                                                                   list(range(1, len(self.step_delta_Q.get_shape()))),
                                                                   keepdims=True)))
-            self.factor_Q = tf.minimum(1., tf.divide(self.eps, self.norm_Q))
+            self.factor_Q = tf.minimum(1., tf.divide(self.adv_eps, self.norm_Q))
 
             self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
             self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
@@ -279,7 +291,7 @@ class APR(RecommenderModel):
         :return:
         """
         # Set eps perturbation (budget)
-        self.eps = attack_eps
+        self.adv_eps = attack_eps
         user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
         print('Initial Performance.')
         self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
@@ -311,7 +323,7 @@ class APR(RecommenderModel):
         :return:
         """
         # Set Iterative Parameters
-        self.eps = attack_eps
+        self.adv_eps = attack_eps
         self.step_size = attack_eps / attack_step_size
         self.iteration = attack_iteration
 

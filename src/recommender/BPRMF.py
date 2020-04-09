@@ -10,6 +10,7 @@ import os
 import logging
 from util.write import save_obj
 from util.read import find_checkpoint
+from copy import deepcopy
 
 np.random.seed(0)
 logging.disable(logging.WARNING)
@@ -148,7 +149,7 @@ class BPRMF(RecommenderModel):
             if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
                 max_hr = results[epoch]['hr'][self.evaluator.k-1]
                 best_epoch = epoch
-                best_model = self
+                best_model = deepcopy(self)
 
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
