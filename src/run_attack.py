@@ -3,7 +3,7 @@ import os
 import shutil
 
 from dataset.dataset import DataLoader
-from recommender.AMR import AMR
+from recommender.APR import APR
 from recommender.BPRMF import BPRMF
 from util.read import read_config
 
@@ -12,17 +12,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run Attack.")
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--dataset', nargs='?', default='movielens-500',
-                        help='dataset path: movielens-1m, gowalla, lastfm, yelp')
-    parser.add_argument('--rec', nargs='?', default="amr", help="bprmf, amr")
+                        help='dataset path: movielens-500, gowalla, lastfm, yelp')
+    parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
-    parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs (Not Used in Run Attack)')
-    parser.add_argument('--verbose', type=int, default=500,
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs (Not Used in Run Attack)')
+    parser.add_argument('--verbose', type=int, default=50,
                         help='number of epochs to show the results ans store model parameters.')
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
-    parser.add_argument('--restore_epochs', type=int, default=1,
+    parser.add_argument('--restore_epochs', type=int, default=2000,
                         help='Default is 1: It is the epoch value from which the attack will be executed.')
 
     # Parameters useful during the adv. training
@@ -31,11 +31,15 @@ def parse_args():
     parser.add_argument('--eps', type=float, default=0.5, help='Epsilon for adversarial weights.')
 
     # Parameters useful during the adv. attack
-    parser.add_argument('--attack_type', nargs='?', default="fgsm", help="fgsm, bim, pgd, deepFool, ...")
+    parser.add_argument('--attack_type', nargs='?', default="pgd", help="fgsm, bim, pgd, deepFool, ...")
     parser.add_argument('--attack_users', nargs='?', default="full", help="full, random (to be implemented), ...")
     parser.add_argument('--attack_eps', type=float, default=0.5, help='Epsilon for adversarial ATTACK.')
     parser.add_argument('--attack_step_size', type=int, default=4, help='Step Size for BIM/PGD ATTACK.')
     parser.add_argument('--attack_iteration', type=int, default=10, help='Iterations for BIM/PGD ATTACK.')
+
+    # Select the Best Model?
+    parser.add_argument('--best', type=int, default=1, help='ATTACK The Best Model. 0 - Select the one specified in Restore/ 1 - Selects the Best Model')
+
 
     return parser.parse_args()
 
@@ -66,7 +70,7 @@ def attack():
                                                                'ep' + str(args.epochs),
                                                                'XX',
                                                                'XX')
-    elif args.rec == 'amr':
+    elif args.rec == 'apr':
         path_output_rec_result = path_output_rec_result.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
@@ -95,8 +99,8 @@ def attack():
     # Initialize the model under attack
     if args.rec == 'bprmf':
         model = BPRMF(data, path_output_rec_result, path_output_rec_weight, args)
-    elif args.rec == 'amr':
-        model = AMR(data, path_output_rec_result, path_output_rec_weight, args)
+    elif args.rec == 'apr':
+        model = APR(data, path_output_rec_result, path_output_rec_weight, args)
     else:
         raise NotImplementedError('Unknown Recommender Model.')
 

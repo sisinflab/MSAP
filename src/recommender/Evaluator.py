@@ -67,7 +67,7 @@ class Evaluator:
         self.eval_feed_dicts = _init_eval_model(data)
         self.model = model
 
-    def eval(self, epoch_text=''):
+    def eval(self, epoch=0, results={}, epoch_text=''):
         """
         Runtime Evaluation of Accuracy Performance (top-k)
         :return:
@@ -85,9 +85,12 @@ class Evaluator:
         for user in range(self.model.data.num_users):
             res.append(_eval_by_user(user))
 
-        hr, ndcg, auc = np.swapaxes((np.array(res).mean(axis=0)).tolist(), 0, 1)[-1]
-        print("%sPerformance\tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (epoch_text, hr, ndcg, auc))
+        hr, ndcg, auc = (np.array(res).mean(axis=0)).tolist()
+        print("%sPerformance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
+            epoch_text, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
 
+        if len(epoch_text) != '':
+            results[epoch] = {'hr': hr, 'ndcg': ndcg, 'auc': auc[0]}
 
     def store_recommendation(self, attack_name=""):
         """
@@ -97,7 +100,8 @@ class Evaluator:
         """
         results = self.model.get_full_inference().numpy()
         with open('{0}/{1}-top{2}-rec.tsv'.format(self.model.path_output_rec_result,
-                                                   attack_name + self.model.path_output_rec_result.split('/')[-2], self.k),
+                                                  attack_name + self.model.path_output_rec_result.split('/')[-2],
+                                                  self.k),
                   'w') as out:
             for u in range(results.shape[0]):
                 results[u][self.data.train_list[u]] = -np.inf
@@ -105,5 +109,3 @@ class Evaluator:
                 top_k_score = results[u][top_k]
                 for i in range(len(top_k)):
                     out.write(str(u) + '\t' + str(i) + '\t' + str(top_k_score[i]) + '\n')
-
-

@@ -3,7 +3,7 @@ import os
 import shutil
 
 from dataset.dataset import DataLoader
-from recommender.AMR import AMR
+from recommender.APR import APR
 from recommender.BPRMF import BPRMF
 from util.read import read_config
 
@@ -11,16 +11,16 @@ from util.read import read_config
 def parse_args():
     parser = argparse.ArgumentParser(description="Run train of the Recommender Model.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='movielens-1m', help='dataset path: movielens-1m, gowalla, lastfm, yelp')
-    parser.add_argument('--rec', nargs='?', default="amr", help="bprmf, amr")
+    parser.add_argument('--dataset', nargs='?', default='movielens-500', help='dataset path: movielens-1m, gowalla, lastfm, yelp')
+    parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
-    parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs.')
-    parser.add_argument('--verbose', type=int, default=1000, help='number of epochs to show the results ans store model parameters.')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs.')
+    parser.add_argument('--verbose', type=int, default=25, help='number of epochs to store model parameters.')
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
-    parser.add_argument('--restore_epochs', type=int, default=1000, help='Default is 1: The restore epochs (Must be lower than the epochs)')
+    parser.add_argument('--restore_epochs', type=int, default=25, help='Default is 1: The restore epochs (Must be lower than the epochs)')
     parser.add_argument('--eps', type=float, default=0.5, help='Epsilon for adversarial weights.')
     parser.add_argument('--adv_type', nargs='?', default="fgsm", help="fgsm, future work other techniques...")
     parser.add_argument('--adv_reg', type=float, default=1, help='Regularization for adversarial loss')
@@ -61,7 +61,7 @@ def train():
                                                                'ep' + str(args.epochs),
                                                                'XX',
                                                                'XX')
-    elif args.rec == 'amr':
+    elif args.rec == 'apr':
         path_output_rec_result = path_output_rec_result.format(args.dataset,
                                                                args.rec,
                                                                'emb' + str(args.embed_size),
@@ -92,8 +92,8 @@ def train():
 
     if args.rec == 'bprmf':
         model = BPRMF(data, path_output_rec_result, path_output_rec_weight, args)
-    elif args.rec == 'amr':
-        model = AMR(data, path_output_rec_result, path_output_rec_weight, args)
+    elif args.rec == 'apr':
+        model = APR(data, path_output_rec_result, path_output_rec_weight, args)
     else:
         raise NotImplementedError('Unknown Recommender Model.')
     model.train()

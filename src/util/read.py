@@ -67,20 +67,30 @@ def load_obj(name):
         return pickle.load(f)
 
 
-def find_checkpoint(dir, restore_epochs, epochs, rec):
+def find_checkpoint(dir, restore_epochs, epochs, rec, best=0):
     """
 
     :param dir: directory of the model where we start from the reading.
     :param restore_epochs: epoch from which we start from.
+    :param epochs: epochs from which we restore (0 means that we have best)
     :param rec: recommender model
+    :param best: 0 No Best - 1 Search for the Best
     :return:
     """
-    if rec == "amr" and restore_epochs < epochs:
+    if best:
+        for r, d, f in os.walk(dir):
+            for file in f:
+                if 'best-weights-'.format(restore_epochs) in file:
+                    return dir + file.split('.')[0]
+        return ''
+
+    if rec == "apr" and restore_epochs < epochs:
         # We have to restore from an execution of bprmf
         dir_stored_models = os.walk('/'.join(dir.split('/')[:-2]))
         for dir_stored_model in dir_stored_models:
             if 'bprmf' in dir_stored_model[0]:
                 dir = dir_stored_model[0] + '/'
+                break
 
     for r, d, f in os.walk(dir):
         for file in f:

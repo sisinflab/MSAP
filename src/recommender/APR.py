@@ -8,7 +8,7 @@ from time import time
 from recommender.Evaluator import Evaluator
 import os
 import logging
-
+from util.write import save_obj
 from util.read import find_checkpoint
 
 np.random.seed(0)
@@ -19,18 +19,18 @@ import tensorflow as tf
 from recommender.RecommenderModel import RecommenderModel
 
 
-class AMR(RecommenderModel):
+class APR(RecommenderModel):
 
     def __init__(self, data, path_output_rec_result, path_output_rec_weight, args):
         """
-        Create a AMR instance.
+        Create a APR instance.
         (see https://arxiv.org/pdf/1205.2618 for details about the algorithm design choices)
         :param data: data loader object
         :param path_output_rec_result: path to the directory rec. results
         :param path_output_rec_weight: path to the directory rec. model parameters
         :param args: parameters
         """
-        super(AMR, self).__init__(data, path_output_rec_result, path_output_rec_weight, args.rec)
+        super(APR, self).__init__(data, path_output_rec_result, path_output_rec_weight, args.rec)
         self.embedding_size = args.embed_size
         self.learning_rate = args.lr
         self.reg = args.reg
@@ -42,7 +42,7 @@ class AMR(RecommenderModel):
         self.evaluator = Evaluator(self, data, args.k)
         self.adv_type = args.adv_type
         self.adv_reg = args.adv_reg
-
+        self.best = args.best
 
         # Initialize Model Parameters
         self.embedding_P = tf.Variable(
@@ -137,23 +137,54 @@ class AMR(RecommenderModel):
 
         saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
 
-        if not self.restore():
+        if self.restore():
+            self.restore_epochs += 1
+        else:
             self.restore_epochs = 1
             print("Training from scratch...")
+
+        # initialize the max_ndcg to memorize the best result
+        max_hr = 0
+        best_model = self
+        best_epoch = self.restore_epochs
+        results = {}
 
         for epoch in range(self.restore_epochs, self.epochs + 1):
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)
-            epoch_text = 'Epoch {0}/{1} '.format(epoch, self.epochs + 1)
-            self.evaluator.eval(epoch_text)
+            epoch_text = 'Epoch {0}/{1} '.format(epoch, self.epochs)
+            self.evaluator.eval(epoch, results, epoch_text)
+
+            # print and log the best result (HR@100)
+            if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
+                max_hr = results[epoch]['hr'][self.evaluator.k-1]
+                best_epoch = epoch
+                best_model = self
 
             if epoch % self.verbose == 0 or epoch == 1:
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
 
         self.evaluator.store_recommendation()
+        save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result, self.path_output_rec_result.split('/')[-2]))
+
+        # Store the best model
+        print("Store Best Model at Epoch {0}".format(best_epoch))
+        saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=best_model)
+        saver_ckpt.save('{0}/best-weights-{1}'.format(self.path_output_rec_weight, best_epoch))
+        best_model.evaluator.store_recommendation()
 
     def restore(self):
         saver_ckpt = tf.train.Checkpoint(optimizer=self.optimizer, model=self)
+        if self.best:
+            try:
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, 0, 0, self.rec, self.best)
+                saver_ckpt.restore(checkpoint_file)
+                print("Best Model correctly Restored: {0}".format(checkpoint_file))
+                return True
+            except Exception as ex:
+                print("Error in model restoring operation! {0}".format(ex.message))
+                return False
+
         if self.restore_epochs > 1:
             try:
                 checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.epochs, self.rec)
@@ -250,15 +281,20 @@ class AMR(RecommenderModel):
         # Set eps perturbation (budget)
         self.eps = attack_eps
         user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
-
         print('Initial Performance.')
-        self.evaluator.eval()
+        self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
 
         # Calculate Adversarial Perturbations
         self.fgsm_perturbation(user_input, item_input_pos, item_input_neg)
 
-        self.evaluator.eval()
+        results = {}
+        print('After Attack Performance.')
+        self.evaluator.eval(self.restore_epochs, results, 'BEST MODEL ' if self.best else str(self.restore_epochs))
         self.evaluator.store_recommendation(attack_name=attack_name)
+        save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result,
+                                                   attack_name + self.path_output_rec_result.split('/')[
+                                                       -2] + '_best{0}'.format(self.best)))
+
         print('{0} - Completed!'.format(attack_name))
 
     def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, attack_name=""):
@@ -286,11 +322,17 @@ class AMR(RecommenderModel):
 
         user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
         print('Initial Performance.')
-        self.evaluator.eval()
+        self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
 
         # Calculate Adversarial Perturbations
         self.iterative_perturbation(user_input, item_input_pos, item_input_neg)
 
-        self.evaluator.eval()
+        results = {}
+        print('After Attack Performance.')
+        self.evaluator.eval(self.restore_epochs, results, 'BEST MODEL ' if self.best else str(self.restore_epochs))
         self.evaluator.store_recommendation(attack_name=attack_name)
+        save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result,
+                                                   attack_name + self.path_output_rec_result.split('/')[
+                                                       -2] + '_best{0}'.format(self.best)))
+
         print('{0} - Completed!'.format(attack_name))
