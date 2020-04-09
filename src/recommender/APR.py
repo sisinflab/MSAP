@@ -68,11 +68,15 @@ class APR(RecommenderModel):
         :return:
         """
         if delta_init:
-            self.delta_P = tf.random.uniform(shape=[self.num_users, self.embedding_size], minval=-0.05, maxval=0.05, dtype=tf.dtypes.float32, seed=0)
-            self.delta_Q = tf.random.uniform(shape=[self.num_items, self.embedding_size], minval=-0.05, maxval=0.05, dtype=tf.dtypes.float32, seed=0)
+            self.delta_P = tf.random.uniform(shape=[self.num_users, self.embedding_size], minval=-0.05, maxval=0.05,
+                                             dtype=tf.dtypes.float32, seed=0)
+            self.delta_Q = tf.random.uniform(shape=[self.num_items, self.embedding_size], minval=-0.05, maxval=0.05,
+                                             dtype=tf.dtypes.float32, seed=0)
         else:
-            self.delta_P = tf.Variable(tf.zeros(shape=[self.num_users, self.embedding_size]), dtype=tf.dtypes.float32, trainable=False)
-            self.delta_Q = tf.Variable(tf.zeros(shape=[self.num_items, self.embedding_size]), dtype=tf.dtypes.float32, trainable=False)
+            self.delta_P = tf.Variable(tf.zeros(shape=[self.num_users, self.embedding_size]), dtype=tf.dtypes.float32,
+                                       trainable=False)
+            self.delta_Q = tf.Variable(tf.zeros(shape=[self.num_items, self.embedding_size]), dtype=tf.dtypes.float32,
+                                       trainable=False)
 
     def get_inference(self, user_input, item_input_pos):
         """
@@ -118,10 +122,14 @@ class APR(RecommenderModel):
                 self.reg_loss = self.reg * tf.reduce_mean(
                     tf.square(embed_p_pos) + tf.square(embed_q_pos) + tf.square(embed_q_neg))
 
+                # Restore Deltas for the Perturbation
+                self.set_delta(delta_init=self.adv_type == 'pgd')
+
                 # Adversarial Training Component
                 if self.adv_type == 'fgsm':
                     self.fgsm_perturbation(user_input, item_input_pos, item_input_neg, batch_idx)
-                elif self.adv_type == 'pgd':
+
+                elif self.adv_type in ['bim', 'pgd']:
                     # Set Iterative Parameters
                     self.adv_eps = self.adv_eps
                     self.step_size = self.adv_eps / self.adv_step_size
@@ -138,12 +146,8 @@ class APR(RecommenderModel):
                 # Loss to be optimized
                 self.loss_opt = self.loss + self.adv_reg * self.loss_adver + self.reg_loss
 
-                # Restore Deltas
-                self.set_delta()
-
             gradients = t.gradient(self.loss_opt, [self.embedding_P, self.embedding_Q])
             self.optimizer.apply_gradients(zip(gradients, [self.embedding_P, self.embedding_Q]))
-
 
     def train(self):
 
@@ -168,8 +172,8 @@ class APR(RecommenderModel):
             self.evaluator.eval(epoch, results, epoch_text)
 
             # print and log the best result (HR@100)
-            if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
-                max_hr = results[epoch]['hr'][self.evaluator.k-1]
+            if max_hr < results[epoch]['hr'][self.evaluator.k - 1]:
+                max_hr = results[epoch]['hr'][self.evaluator.k - 1]
                 best_epoch = epoch
                 best_model = deepcopy(self)
 
@@ -177,7 +181,8 @@ class APR(RecommenderModel):
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
 
         self.evaluator.store_recommendation()
-        save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result, self.path_output_rec_result.split('/')[-2]))
+        save_obj(results,
+                 '{0}/{1}-results'.format(self.path_output_rec_result, self.path_output_rec_result.split('/')[-2]))
 
         # Store the best model
         print("Store Best Model at Epoch {0}".format(best_epoch))
@@ -199,7 +204,8 @@ class APR(RecommenderModel):
 
         if self.restore_epochs > 1:
             try:
-                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.epochs, self.rec)
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.epochs,
+                                                  self.rec)
                 saver_ckpt.restore(checkpoint_file)
                 print("Model correctly Restored at Epoch: {0}".format(self.restore_epochs))
                 return True
