@@ -87,7 +87,7 @@ class Evaluator:
             res.append(_eval_by_user(user))
 
         hr, ndcg, auc = (np.array(res).mean(axis=0)).tolist()
-        print("%s $.3f Performance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
+        print("%s %.3f Performance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
             epoch_text, time()-start_time, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
 
         if len(epoch_text) != '':
