@@ -3,6 +3,7 @@ from multiprocessing import Pool
 from multiprocessing import cpu_count
 import sys
 import math
+from time import time
 
 _feed_dict = None
 _dataset = None
@@ -67,7 +68,7 @@ class Evaluator:
         self.eval_feed_dicts = _init_eval_model(data)
         self.model = model
 
-    def eval(self, epoch=0, results={}, epoch_text=''):
+    def eval(self, epoch=0, results={}, epoch_text='', start_time=0):
         """
         Runtime Evaluation of Accuracy Performance (top-k)
         :return:
@@ -86,8 +87,8 @@ class Evaluator:
             res.append(_eval_by_user(user))
 
         hr, ndcg, auc = (np.array(res).mean(axis=0)).tolist()
-        print("%sPerformance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
-            epoch_text, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
+        print("%s $.3f Performance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
+            epoch_text, time()-start_time, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
 
         if len(epoch_text) != '':
             results[epoch] = {'hr': hr, 'ndcg': ndcg, 'auc': auc[0]}

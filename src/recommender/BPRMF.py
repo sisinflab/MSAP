@@ -140,10 +140,11 @@ class BPRMF(RecommenderModel):
         results = {}
 
         for epoch in range(self.restore_epochs, self.epochs + 1):
+            startep = time()
             batches = self.data.shuffle(self.batch_size)
             self._train_step(batches)
-            epoch_text = 'Epoch {0}/{1} '.format(epoch, self.epochs)
-            self.evaluator.eval(epoch, results, epoch_text)
+            epoch_text = 'Epoch {0}/{1}'.format(epoch, self.epochs)
+            self.evaluator.eval(epoch, results, epoch_text, startep)
 
             # print and log the best result (HR@100)
             if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
