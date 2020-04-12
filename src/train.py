@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
     parser.add_argument('--restore_epochs', type=int, default=1, help='Default is 1: The restore epochs (Must be lower than the epochs)')
-    parser.add_argument('--best', type=int, default=1, help='Parameter useful for attack scenario. Leave at 0 here.')
+    parser.add_argument('--best', type=int, default=0, help='Parameter useful for attack scenario. Leave at 0 here.')
 
     # Parameters useful during the adv. training
     parser.add_argument('--adv_type', nargs='?', default="fgsm", help="fgsm, future work other techniques...")

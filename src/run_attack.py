@@ -10,7 +10,7 @@ from util.read import read_config
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Attack.")
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--gpu', type=int, default=-1)
     parser.add_argument('--dataset', nargs='?', default='movielens-500',
                         help='dataset path: movielens-500, gowalla, lastfm, yelp')
     parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
