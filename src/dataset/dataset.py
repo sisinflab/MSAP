@@ -8,6 +8,7 @@ import scipy.sparse as sp
 import numpy as np
 from multiprocessing import Pool
 from multiprocessing import cpu_count
+import pandas as pd
 from scipy.sparse import dok_matrix
 from time import time
 np.random.seed(0)
@@ -50,25 +51,36 @@ class DataLoader(object):
         :param path_train_data: relative path for train file
         :param path_test_data: relative path for test file
         """
+        self.num_users, self.num_items = self.get_length(path_train_data, path_test_data)
         self.load_train_file(path_train_data)
         self.load_train_file_as_list(path_train_data)
         self.load_test_file(path_test_data)
         self._user_input, self._item_input_pos = self.sampling()
         print('{0} - Loaded'.format(path_train_data))
 
+    def get_length(self, train_name, test_name):
+        train = pd.read_csv(train_name, sep='\t', header=None)
+        test = pd.read_csv(test_name, sep='\t', header=None)
+        train.columns = ['user', 'item', 'r', 't']
+        test.columns = ['user', 'item', 'r', 't']
+        data = train.copy()
+        data = data.append(test, ignore_index=True)
+
+        return data['user'].nunique(), data['item'].nunique()
+
     def load_train_file(self, filename):
         """
         Read /data/dataset_name/train file and Return the matrix.
         """
         # Get number of users and items
-        self.num_users, self.num_items = 0, 0
+        # self.num_users, self.num_items = 0, 0
         with open(filename, "r") as f:
             line = f.readline()
             while line is not None and line != "":
                 arr = line.split("\t")
                 u, i = int(arr[0]), int(arr[1])
-                self.num_users = max(self.num_users, u)
-                self.num_items = max(self.num_items, i)
+                # self.num_users = max(self.num_users, u)
+                # self.num_items = max(self.num_items, i)
                 line = f.readline()
 
         # Construct URM
@@ -82,8 +94,8 @@ class DataLoader(object):
                     self.train[user, item] = 1.0
                 line = f.readline()
 
-        self.num_users = self.train.shape[0]
-        self.num_items = self.train.shape[1]
+        # self.num_users = self.train.shape[0]
+        # self.num_items = self.train.shape[1]
 
     def load_train_file_as_list(self, filename):
         # Get number of users and items
