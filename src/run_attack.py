@@ -227,9 +227,5 @@ def all_attack():
 
 
 
-                else:
-                    raise NotImplementedError('Unknown Attack USERS STRATEGY.')
-
-
 if __name__ == '__main__':
     all_attack()
