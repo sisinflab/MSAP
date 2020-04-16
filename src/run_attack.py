@@ -16,13 +16,13 @@ def parse_args():
     parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs (Not Used in Run Attack)')
-    parser.add_argument('--verbose', type=int, default=50,
+    parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs (Not Used in Run Attack)')
+    parser.add_argument('--verbose', type=int, default=1000,
                         help='number of epochs to show the results ans store model parameters.')
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
-    parser.add_argument('--restore_epochs', type=int, default=20,
+    parser.add_argument('--restore_epochs', type=int, default=1,
                         help='Default is 1: It is the epoch value from which the attack will be executed.')
 
     # Parameters useful during the adv. training
