@@ -11,7 +11,7 @@ from util.read import read_config
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Attack.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='movielens-500',
+    parser.add_argument('--dataset', nargs='?', default='lastfm',
                         help='dataset path: movielens-500, gowalla, lastfm, yelp')
     parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
@@ -131,7 +131,7 @@ def all_attack():
     args = parse_args()
     # args.restore_epochs = args.epochs
 
-    for rec_model in ['bprmf', 'apr']:
+    for rec_model in ['bprmf']:
         args.rec = rec_model
         if rec_model == 'apr':
             adv_epss = [0.5, 1.0, 2.0]
