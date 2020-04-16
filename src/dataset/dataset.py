@@ -64,11 +64,13 @@ class DataLoader(object):
         try:
             train.columns = ['user', 'item', 'r', 't']
             test.columns = ['user', 'item', 'r', 't']
+            data = train.copy()
+            data = data.append(test, ignore_index=True)
         except:
             train.columns = ['user', 'item', 'r']
             test.columns = ['user', 'item', 'r']
-        data = train.copy()
-        data = data.append(test, ignore_index=True)
+            data = train.copy()
+            data = data.append(test, ignore_index=True)
 
         return data['user'].nunique(), data['item'].nunique()
 
