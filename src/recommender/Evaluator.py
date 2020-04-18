@@ -88,7 +88,7 @@ class Evaluator:
 
         hr, ndcg, auc = (np.array(res).mean(axis=0)).tolist()
         print("%s %.3f Performance@%d \tHR: %.4f\tnDCG: %.4f\tAUC: %.4f" % (
-            epoch_text, time()-start_time, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
+            epoch_text, time() - start_time, _K, hr[_K - 1], ndcg[_K - 1], auc[_K - 1]))
 
         if len(epoch_text) != '':
             results[epoch] = {'hr': hr, 'ndcg': ndcg, 'auc': auc[0]}
@@ -100,9 +100,11 @@ class Evaluator:
         :return:
         """
         results = self.model.get_full_inference().numpy()
-        with open('{0}/{1}-top{2}-rec.tsv'.format(self.model.path_output_rec_result,
-                                                  attack_name + self.model.path_output_rec_result.split('/')[-2],
-                                                  self.k),
+        with open('{0}/{1}_best{2}_top{3}_rec.tsv'.format(self.model.path_output_rec_result,
+                                                          attack_name + self.model.path_output_rec_result.split('/')[
+                                                              -2],
+                                                          self.model.best,
+                                                          self.k),
                   'w') as out:
             for u in range(results.shape[0]):
                 results[u][self.data.train_list[u]] = -np.inf
