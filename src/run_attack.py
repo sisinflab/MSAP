@@ -228,4 +228,4 @@ def all_attack():
 
 
 if __name__ == '__main__':
-    attack()
+    all_attack()
