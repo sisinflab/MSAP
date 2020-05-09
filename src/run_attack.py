@@ -11,7 +11,7 @@ from util.read import read_config
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Attack.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='lastfm',
+    parser.add_argument('--dataset', nargs='?', default='fair-movielens',
                         help='dataset path: movielens-500, gowalla, lastfm, yelp')
     parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
@@ -22,11 +22,11 @@ def parse_args():
     parser.add_argument('--embed_size', type=int, default=64, help='Embedding size.')
     parser.add_argument('--reg', type=float, default=0, help='Regularization for user and item embeddings.')
     parser.add_argument('--lr', type=float, default=0.05, help='Learning rate.')
-    parser.add_argument('--restore_epochs', type=int, default=1,
+    parser.add_argument('--restore_epochs', type=int, default=2000,
                         help='Default is 1: It is the epoch value from which the attack will be executed.')
 
     # Parameters useful during the adv. training
-    parser.add_argument('--adv_type', nargs='?', default="fgsm", help="fgsm, future work other techniques...")
+    parser.add_argument('--adv_type', nargs='?', default="pgd", help="fgsm, future work other techniques...")
     parser.add_argument('--adv_iteration', type=int, default=10, help='Iterations for BIM/PGD Adversarial Training.')
     parser.add_argument('--adv_step_size', type=int, default=4, help='Step Size for BIM/PGD ATTACK.')
     parser.add_argument('--adv_reg', type=float, default=0, help='Regularization for adversarial loss')
@@ -40,7 +40,7 @@ def parse_args():
     parser.add_argument('--attack_iteration', type=int, default=10, help='Iterations for BIM/PGD ATTACK.')
 
     # Select the Best Model?
-    parser.add_argument('--best', type=int, default=1, help='ATTACK The Best Model. 0 - Select the one specified in Restore/ 1 - Selects the Best Model')
+    parser.add_argument('--best', type=int, default=0, help='ATTACK The Best Model. 0 - Select the one specified in Restore/ 1 - Selects the Best Model')
 
 
     return parser.parse_args()
@@ -131,10 +131,10 @@ def all_attack():
     args = parse_args()
     # args.restore_epochs = args.epochs
 
-    for rec_model in ['bprmf']:
+    for rec_model in ['apr']:
         args.rec = rec_model
         if rec_model == 'apr':
-            adv_epss = [0.5, 1.0, 2.0]
+            adv_epss = [0.25, 0.5]
         else:
             adv_epss = [0]
 
@@ -228,4 +228,4 @@ def all_attack():
 
 
 if __name__ == '__main__':
-    all_attack()
+    attack()
