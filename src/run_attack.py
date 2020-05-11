@@ -132,7 +132,7 @@ def all_attack():
     # args.restore_epochs = args.epochs
     for ds in ['fair-movielens', 'last']:
         args.dataset = ds
-        for rec_model in ['apr', 'bprmf']:
+        for rec_model in ['bprmf', 'apr']:
             args.rec = rec_model
             if rec_model == 'apr':
                 adv_epss = [0.5]
