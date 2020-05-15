@@ -5,14 +5,15 @@ import shutil
 from dataset.dataset import DataLoader
 from recommender.APR import APR
 from recommender.BPRMF import BPRMF
+from recommender.Random import Random
 from util.read import read_config
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run train of the Recommender Model.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='fair-movielens', help='dataset path: movielens-1m, gowalla, lastfm, yelp')
-    parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
+    parser.add_argument('--dataset', nargs='?', default='lastfm', help='dataset path: fair-movielens, lastfm')
+    parser.add_argument('--rec', nargs='?', default="random", help="bprmf, apr, random")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
     parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs.')
@@ -82,6 +83,20 @@ def train():
                                                                'ep' + str(args.epochs),
                                                                'eps' + str(args.adv_eps),
                                                                '' + args.adv_type)
+    elif args.rec == 'random':
+        path_output_rec_result = path_output_rec_result.format(args.dataset,
+                                                               args.rec,
+                                                               'XX',
+                                                               'XX',
+                                                               'XX',
+                                                               'XX')
+
+        path_output_rec_weight = path_output_rec_weight.format(args.dataset,
+                                                               args.rec,
+                                                               'XX',
+                                                               'XX',
+                                                               'XX',
+                                                               'XX')
 
     # Create directories to Store Results and Rec Models
     manage_directories(path_output_rec_result, path_output_rec_weight)
@@ -101,6 +116,8 @@ def train():
         model = BPRMF(data, path_output_rec_result, path_output_rec_weight, args)
     elif args.rec == 'apr':
         model = APR(data, path_output_rec_result, path_output_rec_weight, args)
+    elif args.rec == 'random':
+        model = Random(data, path_output_rec_result, path_output_rec_weight, args)
     else:
         raise NotImplementedError('Unknown Recommender Model.')
     model.train()
