@@ -294,7 +294,6 @@ class BPRMF(RecommenderModel):
         Inspired by compuer vision attacks:
         BIM: Kurakin et al. http://arxiv.org/abs/1607.02533
         PGD: Madry et al. https://arxiv.org/pdf/1706.06083.pdf
-        :param initial:
         :param attack_type: BIM/PGD
         :param attack_iteration: number of iterations
         :param attack_eps: clipping perturbation

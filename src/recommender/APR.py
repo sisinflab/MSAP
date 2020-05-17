@@ -356,7 +356,7 @@ class APR(RecommenderModel):
         user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
         if initial:
             print('Initial Performance.')
-            self.evaluator
+            self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
 
         # Calculate Adversarial Perturbations
         self.iterative_perturbation(user_input, item_input_pos, item_input_neg)
