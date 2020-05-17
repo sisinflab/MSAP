@@ -199,7 +199,6 @@ def all_attack():
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
                 attack_iterations = [1] + np.arange(0, 500, 10).tolist()[1:] + [500]
-                print(attack_iterations)
             else:
                 attack_iterations = [1]
 
@@ -223,7 +222,6 @@ def all_attack():
                         elif args.attack_type in ['bim', 'pgd']:
                             attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size,
                                                                           args.attack_users)
-                            print(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size)
                             model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size, initial, attack_name)
                             initial = 0
 
