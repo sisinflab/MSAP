@@ -178,12 +178,6 @@ def all_attack():
     data = DataLoader(path_train_data=path_train_data
                       , path_test_data=path_test_data)
 
-    print('*************')
-    print("- PARAMETERS:")
-    for arg in vars(args):
-        print("\t- " + str(arg) + " = " + str(getattr(args, arg)))
-    print("\n")
-
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
 
     # Initialize the model under attack
@@ -204,8 +198,8 @@ def all_attack():
         for attack_type in ['bim', 'pgd']:
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
-                attack_iterations = [1]+np.arange(0, 500, 10).tolist()[1:] + [500]
-                # attack_iterations =
+                attack_iterations = [1] + np.arange(0, 500, 10).tolist()[1:] + [500]
+                print(attack_iterations)
             else:
                 attack_iterations = [1]
 
@@ -213,6 +207,12 @@ def all_attack():
                 args.attack_iteration = attack_iteration
                 for attack_eps in [0.5, 1.0]:
                     args.attack_eps = attack_eps
+
+                    print('*************')
+                    print("- PARAMETERS:")
+                    for arg in vars(args):
+                        print("\t- " + str(arg) + " = " + str(getattr(args, arg)))
+                    print("\n")
 
                     # Initialize the Attack
                     if args.attack_users == 'full':
