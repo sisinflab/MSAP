@@ -143,10 +143,11 @@ def all_attack():
     for adv_eps in adv_epss:
         args.adv_eps = adv_eps
 
-        for attack_type in ['fgsm','bim', 'pgd']:
+        for attack_type in ['bim', 'pgd']:
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
-                attack_iterations = [1]+np.arange(0, 500, 10).tolist()[1:]
+                #attack_iterations = [1]+np.arange(0, 500, 10).tolist()[1:]
+                attack_iterations = [500]
             else:
                 attack_iterations = [1]
 

@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument('--best', type=int, default=0, help='Parameter useful for attack scenario. Leave at 0 here.')
 
     # Parameters useful during the adv. training
-    parser.add_argument('--adv_type', nargs='?', default="fgsm", help="fgsm, future work other techniques...")
+    parser.add_argument('--adv_type', nargs='?', default="pgd", help="fgsm, future work other techniques...")
     parser.add_argument('--adv_iteration', type=int, default=10, help='Iterations for BIM/PGD Adversarial Training.')
     parser.add_argument('--adv_step_size', type=int, default=4, help='Step Size for BIM/PGD ATTACK.')
     parser.add_argument('--adv_reg', type=float, default=1.0, help='Regularization for adversarial loss')
