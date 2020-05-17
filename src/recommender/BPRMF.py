@@ -288,7 +288,7 @@ class BPRMF(RecommenderModel):
 
         print('{0} - Completed!'.format(attack_name))
 
-    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, attack_name=""):
+    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, attack_name="", initial=1):
         """
         ITERATIVE ATTACKS (BIM and PGD)
         Inspired by compuer vision attacks:
@@ -312,8 +312,9 @@ class BPRMF(RecommenderModel):
             self.set_delta(delta_init=0)
 
         user_input, item_input_pos, item_input_neg = self.data.shuffle(len(self.data._user_input))
-        print('Initial Performance.')
-        self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
+        if initial:
+            print('Initial Performance.')
+            self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
 
         # Calculate Adversarial Perturbations
         self.iterative_perturbation(user_input, item_input_pos, item_input_neg)

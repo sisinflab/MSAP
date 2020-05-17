@@ -130,15 +130,73 @@ def attack():
 
 def all_attack():
     args = parse_args()
-    # args.restore_epochs = args.epochs
-    # for ds in ['fair-movielens', 'last']:
-    #     args.dataset = ds
-    # for rec_model in ['bprmf', 'apr']:
-    #     args.rec = rec_model
+    initial = 1
+
     if args.rec == 'apr':
         adv_epss = [0.5]
     else:
         adv_epss = [0]
+
+    path_train_data, path_test_data, path_output_rec_result, path_output_rec_weight = read_config(
+        sections_fields=[('PATHS', 'InputTrainFile'),
+                         ('PATHS', 'InputTestFile'),
+                         ('PATHS', 'OutputRecResult'),
+                         ('PATHS', 'OutputRecWeight')])
+
+    path_train_data, path_test_data, = path_train_data.format(
+        args.dataset), path_test_data.format(args.dataset)
+
+    if args.rec == 'bprmf':
+        path_output_rec_result = path_output_rec_result.format(args.dataset,
+                                                               args.rec,
+                                                               'emb' + str(args.embed_size),
+                                                               'ep' + str(args.epochs),
+                                                               'XX',
+                                                               'XX')
+
+        path_output_rec_weight = path_output_rec_weight.format(args.dataset,
+                                                               args.rec,
+                                                               'emb' + str(args.embed_size),
+                                                               'ep' + str(args.epochs),
+                                                               'XX',
+                                                               'XX')
+    elif args.rec == 'apr':
+        path_output_rec_result = path_output_rec_result.format(args.dataset,
+                                                               args.rec,
+                                                               'emb' + str(args.embed_size),
+                                                               'ep' + str(args.epochs),
+                                                               'eps' + str(args.adv_eps),
+                                                               '' + args.adv_type)
+
+        path_output_rec_weight = path_output_rec_weight.format(args.dataset,
+                                                               args.rec,
+                                                               'emb' + str(args.embed_size),
+                                                               'ep' + str(args.epochs),
+                                                               'eps' + str(args.adv_eps),
+                                                               '' + args.adv_type)
+
+    data = DataLoader(path_train_data=path_train_data
+                      , path_test_data=path_test_data)
+
+    print('*************')
+    print("- PARAMETERS:")
+    for arg in vars(args):
+        print("\t- " + str(arg) + " = " + str(getattr(args, arg)))
+    print("\n")
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+
+    # Initialize the model under attack
+    if args.rec == 'bprmf':
+        model = BPRMF(data, path_output_rec_result, path_output_rec_weight, args)
+    elif args.rec == 'apr':
+        model = APR(data, path_output_rec_result, path_output_rec_weight, args)
+    else:
+        raise NotImplementedError('Unknown Recommender Model.')
+
+    # Restore the Model Parameters
+    if not model.restore():
+        raise NotImplementedError('Unknown Restore Point/Model.')
 
     for adv_eps in adv_epss:
         args.adv_eps = adv_eps
@@ -156,67 +214,6 @@ def all_attack():
                 for attack_eps in [0.5, 1.0]:
                     args.attack_eps = attack_eps
 
-                    path_train_data, path_test_data, path_output_rec_result, path_output_rec_weight = read_config(
-                        sections_fields=[('PATHS', 'InputTrainFile'),
-                                         ('PATHS', 'InputTestFile'),
-                                         ('PATHS', 'OutputRecResult'),
-                                         ('PATHS', 'OutputRecWeight')])
-
-                    path_train_data, path_test_data, = path_train_data.format(
-                        args.dataset), path_test_data.format(args.dataset)
-
-                    if args.rec == 'bprmf':
-                        path_output_rec_result = path_output_rec_result.format(args.dataset,
-                                                                               args.rec,
-                                                                               'emb' + str(args.embed_size),
-                                                                               'ep' + str(args.epochs),
-                                                                               'XX',
-                                                                               'XX')
-
-                        path_output_rec_weight = path_output_rec_weight.format(args.dataset,
-                                                                               args.rec,
-                                                                               'emb' + str(args.embed_size),
-                                                                               'ep' + str(args.epochs),
-                                                                               'XX',
-                                                                               'XX')
-                    elif args.rec == 'apr':
-                        path_output_rec_result = path_output_rec_result.format(args.dataset,
-                                                                               args.rec,
-                                                                               'emb' + str(args.embed_size),
-                                                                               'ep' + str(args.epochs),
-                                                                               'eps' + str(args.adv_eps),
-                                                                               '' + args.adv_type)
-
-                        path_output_rec_weight = path_output_rec_weight.format(args.dataset,
-                                                                               args.rec,
-                                                                               'emb' + str(args.embed_size),
-                                                                               'ep' + str(args.epochs),
-                                                                               'eps' + str(args.adv_eps),
-                                                                               '' + args.adv_type)
-
-                    data = DataLoader(path_train_data=path_train_data
-                                      , path_test_data=path_test_data)
-
-                    print('*************')
-                    print("- PARAMETERS:")
-                    for arg in vars(args):
-                        print("\t- " + str(arg) + " = " + str(getattr(args, arg)))
-                    print("\n")
-
-                    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-
-                    # Initialize the model under attack
-                    if args.rec == 'bprmf':
-                        model = BPRMF(data, path_output_rec_result, path_output_rec_weight, args)
-                    elif args.rec == 'apr':
-                        model = APR(data, path_output_rec_result, path_output_rec_weight, args)
-                    else:
-                        raise NotImplementedError('Unknown Recommender Model.')
-
-                    # Restore the Model Parameters
-                    if not model.restore():
-                        raise NotImplementedError('Unknown Restore Point/Model.')
-
                     # Initialize the Attack
                     if args.attack_users == 'full':
                         # Start full batch attacks
@@ -226,7 +223,8 @@ def all_attack():
                         elif args.attack_type in ['bim', 'pgd']:
                             attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size,
                                                                           args.attack_users)
-                            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size, attack_name)
+                            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size, attack_name, initial)
+                            initial = 0
 
 
 
