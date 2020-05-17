@@ -146,8 +146,8 @@ def all_attack():
         for attack_type in ['bim', 'pgd']:
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
-                #attack_iterations = [1]+np.arange(0, 500, 10).tolist()[1:]
-                attack_iterations = [500]
+                attack_iterations = [1]+np.arange(0, 500, 10).tolist()[1:] + [500]
+                # attack_iterations =
             else:
                 attack_iterations = [1]
 

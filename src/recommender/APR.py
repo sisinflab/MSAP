@@ -277,25 +277,32 @@ class APR(RecommenderModel):
             # eta = adv_x - x
             # eta = clip_eta(eta, norm, eps)
             # adv_x = x + eta
-
             # L2 NORM on P
-            self.norm_P = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_P),
-                                                                  list(range(1, len(self.step_delta_P.get_shape()))),
-                                                                  keepdims=True)))
-            # We must *clip* to within the norm ball, not *normalize* onto the surface of the ball
-            self.factor_P = tf.minimum(1., tf.divide(self.adv_eps, self.norm_P))
 
-            # L2 NORM on Q
-            self.norm_Q = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_Q),
-                                                                  list(range(1, len(self.step_delta_Q.get_shape()))),
-                                                                  keepdims=True)))
-            self.factor_Q = tf.minimum(1., tf.divide(self.adv_eps, self.norm_Q))
+            # self.norm_P = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_P),
+            #                                                       list(range(1, len(self.step_delta_P.get_shape()))),
+            #                                                       keepdims=True)))
+            # # We must *clip* to within the norm ball, not *normalize* onto the surface of the ball
+            # self.factor_P = tf.minimum(1., tf.divide(self.adv_eps, self.norm_P))
+            #
+            # # L2 NORM on Q
+            # self.norm_Q = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_Q),
+            #                                                       list(range(1, len(self.step_delta_Q.get_shape()))),
+            #                                                       keepdims=True)))
+            # self.factor_Q = tf.minimum(1., tf.divide(self.adv_eps, self.norm_Q))
 
-            # self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
-            # self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
+            # self.delta_P = self.step_delta_P * self.factor_P
+            # self.delta_Q = self.step_delta_Q * self.factor_Q
 
-            self.delta_P = self.step_delta_P * self.factor_P
-            self.delta_Q = self.step_delta_Q * self.factor_Q
+            self.delta_P = tf.clip_by_value(self.delta_P + self.step_delta_P, -self.adv_eps, self.adv_eps)
+            self.delta_Q = tf.clip_by_value(self.delta_Q + self.step_delta_Q, -self.adv_eps, self.adv_eps)
+
+            if np.any(self.delta_P > self.adv_eps) or np.any(self.delta_Q > self.adv_eps):
+
+                print('Test Pert.\nP is out the clip? {0}\nQ is out the clip? {1} \n- MAX P {2} - Q {3}'.format(np.any(self.delta_P > self.adv_eps),
+                                                                                                  np.any(self.delta_Q > self.adv_eps),
+                                                                                                  np.max(self.delta_P), np.max(self.delta_Q)))
+
 
     def attack_full_fgsm(self, attack_eps, attack_name=""):
         """
