@@ -12,8 +12,8 @@ from util.read import read_config
 def parse_args():
     parser = argparse.ArgumentParser(description="Run train of the Recommender Model.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='lastfm', help='dataset path: fair-movielens, lastfm')
-    parser.add_argument('--rec', nargs='?', default="random", help="bprmf, apr, random")
+    parser.add_argument('--dataset', nargs='?', default='fair-movielens', help='dataset path: fair-movielens, lastfm')
+    parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr, random")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
     parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs.')
@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--adv_iteration', type=int, default=10, help='Iterations for BIM/PGD Adversarial Training.')
     parser.add_argument('--adv_step_size', type=int, default=4, help='Step Size for BIM/PGD ATTACK.')
     parser.add_argument('--adv_reg', type=float, default=1.0, help='Regularization for adversarial loss')
-    parser.add_argument('--adv_eps', type=float, default=2.0, help='Epsilon for adversarial weights.')
+    parser.add_argument('--adv_eps', type=float, default=0.5, help='Epsilon for adversarial weights.')
 
 
 

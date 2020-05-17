@@ -107,6 +107,10 @@ class APR(RecommenderModel):
         user_input, item_input_pos, item_input_neg = batches
 
         for batch_idx in range(len(user_input)):
+
+            # Restore Deltas for the Perturbation
+            self.set_delta(delta_init=0)
+
             with tf.GradientTape() as t:
                 t.watch([self.embedding_P, self.embedding_Q])
 
@@ -244,7 +248,7 @@ class APR(RecommenderModel):
 
     def iterative_perturbation(self, user_input, item_input_pos, item_input_neg, batch_idx=0):
         """
-        Evaluate Adversarial Perturbation with FGSM-like Approach
+        Evaluate Adversarial Perturbation with Iterative-like Approach
         :param user_input:
         :param item_input_pos:
         :param item_input_neg:
