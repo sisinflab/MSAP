@@ -288,12 +288,13 @@ class BPRMF(RecommenderModel):
 
         print('{0} - Completed!'.format(attack_name))
 
-    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, attack_name="", initial=1):
+    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, initial=1, attack_name=""):
         """
         ITERATIVE ATTACKS (BIM and PGD)
         Inspired by compuer vision attacks:
         BIM: Kurakin et al. http://arxiv.org/abs/1607.02533
         PGD: Madry et al. https://arxiv.org/pdf/1706.06083.pdf
+        :param initial:
         :param attack_type: BIM/PGD
         :param attack_iteration: number of iterations
         :param attack_eps: clipping perturbation
