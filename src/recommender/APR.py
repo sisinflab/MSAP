@@ -291,8 +291,11 @@ class APR(RecommenderModel):
                                                                   keepdims=True)))
             self.factor_Q = tf.minimum(1., tf.divide(self.adv_eps, self.norm_Q))
 
-            self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
-            self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
+            # self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
+            # self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
+
+            self.delta_P = self.step_delta_P * self.factor_P
+            self.delta_Q = self.step_delta_Q * self.factor_Q
 
     def attack_full_fgsm(self, attack_eps, attack_name=""):
         """
