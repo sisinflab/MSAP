@@ -14,7 +14,7 @@ def parse_args():
     parser.add_argument('--gpu', type=int, default=-1)
     parser.add_argument('--dataset', nargs='?', default='fair-movielens',
                         help='dataset path: movielens-500, gowalla, lastfm, yelp')
-    parser.add_argument('--rec', nargs='?', default="apr", help="bprmf, apr")
+    parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
     parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs (Not Used in Run Attack)')
@@ -41,8 +41,8 @@ def parse_args():
     parser.add_argument('--attack_iteration', type=int, default=10, help='Iterations for BIM/PGD ATTACK.')
 
     # Select the Best Model?
-    parser.add_argument('--best', type=int, default=0, help='ATTACK The Best Model. 0 - Select the one specified in Restore/ 1 - Selects the Best Model')
-
+    parser.add_argument('--best', type=int, default=1,
+                        help='ATTACK The Best Model. 0 - Select the one specified in Restore/ 1 - Selects the Best Model')
 
     return parser.parse_args()
 
@@ -118,9 +118,11 @@ def attack():
             attack_name = '{0}_ep{1}_sz{2}_'.format(args.attack_type, args.attack_eps, args.attack_users)
             model.attack_full_fgsm(args.attack_eps, attack_name)
         elif args.attack_type in ['bim', 'pgd']:
-            attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size,
-                                                          args.attack_users)
-            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size, attack_name)
+            attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration, args.attack_eps,
+                                                             args.attack_step_size,
+                                                             args.attack_users)
+            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size,
+                                        attack_name)
 
 
 
@@ -195,16 +197,16 @@ def all_attack():
     for adv_eps in adv_epss:
         args.adv_eps = adv_eps
 
-        for attack_type in ['bim', 'pgd']:
+        for attack_type in ['bim', 'pgd', 'fgsm']:
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
-                attack_iterations = [1] + np.arange(0, 500, 10).tolist()[1:] + [500]
+                attack_iterations = [1] + np.arange(0, 300, 10).tolist()[1:] + [300]
             else:
                 attack_iterations = [1]
 
             for attack_iteration in attack_iterations:
                 args.attack_iteration = attack_iteration
-                for attack_eps in [0.5, 1.0]:
+                for attack_eps in [0.5]:
                     args.attack_eps = attack_eps
 
                     print('*************')
@@ -217,14 +219,16 @@ def all_attack():
                     if args.attack_users == 'full':
                         # Start full batch attacks
                         if args.attack_type == 'fgsm':
-                            attack_name = '{0}_ep{1}_sz{2}_'.format(args.attack_type, args.attack_eps, args.attack_users)
+                            attack_name = '{0}_ep{1}_sz{2}_'.format(args.attack_type, args.attack_eps,
+                                                                    args.attack_users)
                             model.attack_full_fgsm(args.attack_eps, attack_name)
                         elif args.attack_type in ['bim', 'pgd']:
-                            attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size,
-                                                                          args.attack_users)
-                            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps, args.attack_step_size, initial, attack_name)
+                            attack_name = '{0}{1}_ep{2}_es{3}_sz{4}_'.format(args.attack_type, args.attack_iteration,
+                                                                             args.attack_eps, args.attack_step_size,
+                                                                             args.attack_users)
+                            model.attack_full_iterative(args.attack_type, args.attack_iteration, args.attack_eps,
+                                                        args.attack_step_size, initial, attack_name)
                             initial = 0
-
 
 
 if __name__ == '__main__':

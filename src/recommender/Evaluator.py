@@ -100,7 +100,7 @@ class Evaluator:
         :return:
         """
         results = self.model.get_full_inference().numpy()
-        with open('{0}/{1}_best{2}_top{3}_rec.tsv'.format(self.model.path_output_rec_result,
+        with open('{0}{1}_best{2}_top{3}_rec.tsv'.format(self.model.path_output_rec_result,
                                                           attack_name + self.model.path_output_rec_result.split('/')[
                                                               -2],
                                                           self.model.best,
