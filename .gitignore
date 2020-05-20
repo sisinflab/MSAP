@@ -24,4 +24,9 @@ data/lastfm
 data/yelp
 data/pinterest
 
-RankSys/*
+OLD-RankSys/*
+OLD-*
+Plotter/*
+RankSys*
+OLD-Plotter/*
+log/*
