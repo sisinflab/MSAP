@@ -147,8 +147,8 @@ class BPRMF(RecommenderModel):
             self.evaluator.eval(epoch, results, epoch_text, startep)
 
             # print and log the best result (HR@100)
-            if max_hr < results[epoch]['hr'][self.evaluator.k-1]:
-                max_hr = results[epoch]['hr'][self.evaluator.k-1]
+            if max_hr < results[epoch]['hr'][self.evaluator.k - 1]:
+                max_hr = results[epoch]['hr'][self.evaluator.k - 1]
                 best_epoch = epoch
                 best_model = deepcopy(self)
 
@@ -156,7 +156,8 @@ class BPRMF(RecommenderModel):
                 saver_ckpt.save('{0}/weights-{1}'.format(self.path_output_rec_weight, epoch))
 
         self.evaluator.store_recommendation()
-        save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result, self.path_output_rec_result.split('/')[-2]))
+        save_obj(results,
+                 '{0}/{1}-results'.format(self.path_output_rec_result, self.path_output_rec_result.split('/')[-2]))
 
         # Store the best model
         print("Store Best Model at Epoch {0}".format(best_epoch))
@@ -178,7 +179,8 @@ class BPRMF(RecommenderModel):
 
         if self.restore_epochs > 1:
             try:
-                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.epochs, self.rec)
+                checkpoint_file = find_checkpoint(self.path_output_rec_weight, self.restore_epochs, self.epochs,
+                                                  self.rec)
                 saver_ckpt.restore(checkpoint_file)
                 print("Model correctly Restored at Epoch: {0}".format(self.restore_epochs))
                 return True
@@ -216,7 +218,7 @@ class BPRMF(RecommenderModel):
 
     def iterative_perturbation(self, user_input, item_input_pos, item_input_neg, batch_idx=0):
         """
-        Evaluate Adversarial Perturbation with FGSM-like Approach
+        Evaluate Adversarial Perturbation with Iterative-like Approach
         :param user_input:
         :param item_input_pos:
         :param item_input_neg:
@@ -247,20 +249,28 @@ class BPRMF(RecommenderModel):
             # adv_x = x + eta
 
             # L2 NORM on P
-            self.norm_P = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_P),
-                                                                  list(range(1, len(self.step_delta_P.get_shape()))),
-                                                                  keepdims=True)))
-            # We must *clip* to within the norm ball, not *normalize* onto the surface of the ball
-            self.factor_P = tf.minimum(1., tf.divide(self.eps, self.norm_P))
+            # self.norm_P = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_P),
+            #                                                       list(range(1, len(self.step_delta_P.get_shape()))),
+            #                                                       keepdims=True)))
+            # # We must *clip* to within the norm ball, not *normalize* onto the surface of the ball
+            # self.factor_P = tf.minimum(1., tf.divide(self.eps, self.norm_P))
+            #
+            # # L2 NORM on Q
+            # self.norm_Q = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_Q),
+            #                                                       list(range(1, len(self.step_delta_Q.get_shape()))),
+            #                                                       keepdims=True)))
+            # self.factor_Q = tf.minimum(1., tf.divide(self.eps, self.norm_Q))
+            #
+            # self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
+            # self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
 
-            # L2 NORM on Q
-            self.norm_Q = tf.sqrt(tf.maximum(1e-12, tf.reduce_sum(tf.square(self.step_delta_Q),
-                                                                  list(range(1, len(self.step_delta_Q.get_shape()))),
-                                                                  keepdims=True)))
-            self.factor_Q = tf.minimum(1., tf.divide(self.eps, self.norm_Q))
+            self.delta_P = tf.clip_by_value(self.delta_P + self.step_delta_P, -self.adv_eps, self.adv_eps)
+            self.delta_Q = tf.clip_by_value(self.delta_Q + self.step_delta_Q, -self.adv_eps, self.adv_eps)
 
-            self.delta_P = self.delta_P + self.step_delta_P * self.factor_P
-            self.delta_Q = self.delta_Q + self.step_delta_Q * self.factor_Q
+            if np.any(self.delta_P > self.adv_eps) or np.any(self.delta_Q > self.adv_eps):
+                print('Test Pert.\nP is out the clip? {0}\nQ is out the clip? {1} \n- MAX P {2} - Q {3}'.format(
+                    np.any(self.delta_P > self.adv_eps), np.any(self.delta_Q > self.adv_eps),
+                    np.max(self.delta_P), np.max(self.delta_Q)))
 
     def attack_full_fgsm(self, attack_eps, attack_name=""):
         """
@@ -288,7 +298,8 @@ class BPRMF(RecommenderModel):
 
         print('{0} - Completed!'.format(attack_name))
 
-    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, initial=1, attack_name=""):
+    def attack_full_iterative(self, attack_type, attack_iteration, attack_eps, attack_step_size, initial=1,
+                              attack_name=""):
         """
         ITERATIVE ATTACKS (BIM and PGD)
         Inspired by compuer vision attacks:
@@ -302,7 +313,7 @@ class BPRMF(RecommenderModel):
         :return:
         """
         # Set Iterative Parameters
-        self.eps = attack_eps
+        self.adv_eps = attack_eps
         self.step_size = attack_eps / attack_step_size
         self.iteration = attack_iteration
 
@@ -316,15 +327,15 @@ class BPRMF(RecommenderModel):
             print('Initial Performance.')
             self.evaluator.eval(self.restore_epochs, {}, 'BEST MODEL ' if self.best else str(self.restore_epochs))
             self.evaluator.store_recommendation(attack_name='')
-
         # Calculate Adversarial Perturbations
         self.iterative_perturbation(user_input, item_input_pos, item_input_neg)
 
         results = {}
         print('After Attack Performance.')
         self.evaluator.eval(self.restore_epochs, results, 'BEST MODEL ' if self.best else str(self.restore_epochs))
-        self.evaluator.store_recommendation(attack_name='/'+attack_name)
+        self.evaluator.store_recommendation(attack_name='/' + attack_name)
         save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result,
-                                                            attack_name + self.path_output_rec_result.split('/')[-2] + '_best{0}'.format(self.best)))
+                                                   attack_name + self.path_output_rec_result.split('/')[
+                                                       -2] + '_best{0}'.format(self.best)))
 
         print('{0} - Completed!'.format(attack_name))

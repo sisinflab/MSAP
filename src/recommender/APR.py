@@ -364,7 +364,7 @@ class APR(RecommenderModel):
         results = {}
         print('After Attack Performance.')
         self.evaluator.eval(self.restore_epochs, results, 'BEST MODEL ' if self.best else str(self.restore_epochs))
-        self.evaluator.store_recommendation(attack_name='/'+attack_name)
+        self.evaluator.store_recommendation(attack_name='/' + attack_name)
         save_obj(results, '{0}/{1}-results'.format(self.path_output_rec_result,
                                                    attack_name + self.path_output_rec_result.split('/')[
                                                        -2] + '_best{0}'.format(self.best)))
