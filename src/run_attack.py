@@ -200,7 +200,8 @@ def all_attack():
         for attack_type in ['bim', 'pgd', 'fgsm']:
             args.attack_type = attack_type
             if attack_type in ['bim', 'pgd']:
-                attack_iterations = [1] + np.arange(0, 300, 10).tolist()[1:] + [300]
+                # attack_iterations = [1] + np.arange(0, 300, 10).tolist()[1:] + [300]
+                attack_iterations = [10, 25]
             else:
                 attack_iterations = [1]
 

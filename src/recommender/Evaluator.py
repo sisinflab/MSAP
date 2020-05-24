@@ -26,16 +26,19 @@ def _init_eval_model(data):
 
 def _evaluate_input(user):
     # generate items_list
-    test_item = _dataset.test[user][1]
-    item_input = set(range(_dataset.num_items)) - set(_dataset.train_list[user])
-    if test_item in item_input:
-        item_input.remove(test_item)
-    item_input = list(item_input)
-    item_input.append(test_item)
-    user_input = np.full(len(item_input), user, dtype='int32')[:, None]
-    item_input = np.array(item_input)[:, None]
-    return user_input, item_input
-
+    try:
+        test_item = _dataset.test[user][1]
+        item_input = set(range(_dataset.num_items)) - set(_dataset.train_list[user])
+        if test_item in item_input:
+            item_input.remove(test_item)
+        item_input = list(item_input)
+        item_input.append(test_item)
+        user_input = np.full(len(item_input), user, dtype='int32')[:, None]
+        item_input = np.array(item_input)[:, None]
+        return user_input, item_input
+    except:
+        print('******'+user)
+        return 0, 0
 
 def _eval_by_user(user):
     # get predictions of data in testing set
