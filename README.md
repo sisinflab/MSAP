@@ -64,4 +64,4 @@ where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the b
 
 ### 4. Attack evaluation
 
-The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/filen_anme.tsv```.
+The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/file_name.tsv```.
