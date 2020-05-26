@@ -60,7 +60,7 @@ python run_attack.py \
   --attack_iteration <attack_iteration> \
   --best 1
 ```
-where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the budget perturbation \(\epsilon\), ```attack_step_size``` is the step size (e.g., 4) used in the iterative attacks, ```attack_iteration``` is the number of iterations.
+where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the budget perturbation (epsilon), ```attack_step_size``` is the step size (e.g., 4) used in the iterative attacks, ```attack_iteration``` is the number of iterations.
 
 ### 4. Recommendation Evaluation
 
