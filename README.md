@@ -47,3 +47,21 @@ python train.py \
   --adv_reg 1
  ```
  ```adv_type```, ```adv_eps```, ```adv_reg``` are parameters set to specify the type of fgsm-like attack used to apply the adversarial regularization.
+ 
+### 3. Run Attacks
+Based upon the produced recommender model we can run the attacks:
+```
+python run_attack.py \
+  --dataset <dataset_name> \
+  --rec <recommendr_name> \
+  --attack_type <attack_type> \
+  --attack_eps <attack_eps> \
+  --attack_step_size <attack_step_size> \
+  --attack_iteration <attack_iteration> \
+  --best 1
+```
+where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the budget perturbation \(\epsilon\), ```attack_step_size``` is the step size (e.g., 4) used in the iterative attacks, ```attack_iteration``` is the number of iterations.
+
+### 4. Attack evaluation
+
+The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/filen_anme.tsv```.
