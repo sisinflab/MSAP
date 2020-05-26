@@ -62,6 +62,6 @@ python run_attack.py \
 ```
 where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the budget perturbation \(\epsilon\), ```attack_step_size``` is the step size (e.g., 4) used in the iterative attacks, ```attack_iteration``` is the number of iterations.
 
-### 4. Attack evaluation
+### 4. Recommendation Evaluation
 
-The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/file_name.tsv```.
+The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/file_name.tsv```. Each result file can be evaluated with different evaluation frameworks.
