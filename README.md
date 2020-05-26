@@ -1,5 +1,5 @@
 # Iterative Adversarial Perturbations against Personalized Latent Recommenders.
-This is the official github repository of the paper **Iterative Adversarial Perturbations against Personalized Latent Recommenders**.
+This is the official github repository of the paper **Iterative Adversarial Perturbations against Personalized Latent Recommenders**
 
 RecSys2020 Submission ID: 1435
 
