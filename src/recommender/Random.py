@@ -1,7 +1,7 @@
 """
 Created on April 4, 2020
 Tensorflow 2.1.0 implementation of APR.
-@author Felice Antonio Merra (felice.merra@poliba.it)
+@author Anonymized
 """
 import numpy as np
 from time import time

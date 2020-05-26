@@ -98,7 +98,7 @@ class Evaluator:
 
     def store_recommendation(self, attack_name=""):
         """
-        Store recommendation list (top-k) in order to be used for the ranksys framework (sisinflab)
+        Store recommendation list (top-k) in order to be used for the ranksys framework (anonymized)
         attack_name: The name for the attack stored file
         :return:
         """

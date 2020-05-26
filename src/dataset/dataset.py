@@ -1,7 +1,7 @@
 """
 Created on April 1, 2020
 Processing datasets.
-@author Felice Antonio Merra (felice.merra@poliba.it)
+@author Anonymized
 Inspired by @author: Xiangnan He (xiangnanhe@gmail.com)
 """
 import scipy.sparse as sp
@@ -11,6 +11,7 @@ from multiprocessing import cpu_count
 import pandas as pd
 from scipy.sparse import dok_matrix
 from time import time
+
 np.random.seed(0)
 
 _user_input = None
@@ -21,6 +22,7 @@ _model = None
 _train = None
 _test = None
 _num_items = None
+
 
 def _get_train_batch(i):
     """
@@ -173,4 +175,3 @@ class DataLoader(object):
         item_input_pos = [r[1] for r in res]
         item_input_neg = [r[2] for r in res]
         return user_input, item_input_pos, item_input_neg
-

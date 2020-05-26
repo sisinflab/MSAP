@@ -17,24 +17,3 @@ venv.bak/
 pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/venv
-
-# Datasets
-data/gowalla
-data/lastfm
-data/yelp
-data/pinterest
-
-OLD-RankSys/*
-OLD-*
-Plotter/*
-RankSys*
-OLD-Plotter/*
-log/*
-RankSys-eps/*
-Plotter-eps/*
-Plotter.zip
-Plotter-groups/*
-RankSys-groups/*
-/Plotter/*
-
-/Plotter-sparsity/*

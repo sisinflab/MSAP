@@ -1,7 +1,7 @@
 """
 Created on April 1, 2020
 Define Recommender Model.
-@author Felice Antonio Merra (felice.merra@poliba.it)
+@author Anonymized
 """
 import tensorflow as tf
 

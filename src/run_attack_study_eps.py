@@ -12,8 +12,8 @@ from util.read import read_config
 def parse_args():
     parser = argparse.ArgumentParser(description="Run Attack.")
     parser.add_argument('--gpu', type=int, default=-1)
-    parser.add_argument('--dataset', nargs='?', default='fair-movielens',
-                        help='dataset path: movielens-500, gowalla, lastfm, yelp')
+    parser.add_argument('--dataset', nargs='?', default='movielens',
+                        help='dataset path: movielens, lastfm')
     parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
     parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
@@ -49,7 +49,7 @@ def parse_args():
 
 def attack():
     args = parse_args()
-    # args.restore_epochs = args.epochs
+
     path_train_data, path_test_data, path_output_rec_result, path_output_rec_weight = read_config(
         sections_fields=[('PATHS', 'InputTrainFile'),
                          ('PATHS', 'InputTestFile'),
