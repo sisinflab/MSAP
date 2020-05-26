@@ -1,4 +1,4 @@
-This is the official github repository of the paper **Iterative Adversarial Perturbations against Personalized Latent Recommenders**
+Official github repository.
 
 **Table of Contents:**
 - [Requirements](#requirements)
