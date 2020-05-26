@@ -46,4 +46,4 @@ python train.py \
   --adv_eps 0.5\
   --adv_reg 1
  ```
- 
+ ```adv_type```, ```adv_eps```, ```adv_reg``` are parameters set to specify the type of fgsm-like attack used to apply the adversarial regularization.
