@@ -41,6 +41,9 @@ python train.py \
   --rec apr \
   --epochs 2000 \
   --restore_epochs 100 \
-  --k 10
+  --k 10 \
+  --adv_type fgsm\
+  --adv_eps 0.5\
+  --adv_reg 1
  ```
  
