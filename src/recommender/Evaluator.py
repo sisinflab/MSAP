@@ -48,7 +48,7 @@ def _eval_by_user(user):
     neg_predict, pos_predict = predictions[:-1], predictions[-1]
     position = (neg_predict.numpy() >= pos_predict.numpy()).sum()
 
-    # calculate from HR@1 to HR@100, and from NDCG@1 to NDCG@100, AUC
+    # calculate from HR@1 to HR@10, and from NDCG@1 to NDCG@100, AUC
     hr, ndcg, auc = [], [], []
     for k in range(1, _K + 1):
         hr.append(position < k)

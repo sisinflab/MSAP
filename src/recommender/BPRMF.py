@@ -146,7 +146,7 @@ class BPRMF(RecommenderModel):
             epoch_text = 'Epoch {0}/{1}'.format(epoch, self.epochs)
             self.evaluator.eval(epoch, results, epoch_text, startep)
 
-            # print and log the best result (HR@100)
+            # print and log the best result (HR@10)
             if max_hr < results[epoch]['hr'][self.evaluator.k - 1]:
                 max_hr = results[epoch]['hr'][self.evaluator.k - 1]
                 best_epoch = epoch

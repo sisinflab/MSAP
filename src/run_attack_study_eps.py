@@ -16,7 +16,7 @@ def parse_args():
                         help='dataset path: movielens, lastfm')
     parser.add_argument('--rec', nargs='?', default="bprmf", help="bprmf, apr")
     parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-    parser.add_argument('--k', type=int, default=100, help='top-k of recommendation.')
+    parser.add_argument('--k', type=int, default=10, help='top-k of recommendation.')
     parser.add_argument('--epochs', type=int, default=2000, help='Number of epochs (Not Used in Run Attack)')
     parser.add_argument('--verbose', type=int, default=1000,
                         help='number of epochs to show the results ans store model parameters.')
