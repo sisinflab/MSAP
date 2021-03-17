@@ -2,7 +2,7 @@
 
 GitHub repository of the FLAIRS2021 paper: MSAP: Multi-Step Adversarial Perturbations on Recommender Systems Embeddings, published by Vito Walter Anelli, Alejandro Bellogín, Yashar Deldjoo, Tommaso Di Noia, and Felice Antonio Merra.
 
-Paper available at [Sisinflab](http://sisinflab.poliba.it/publications/2021) publications web page.
+Paper available at [Sisinflab](http://sisinflab.poliba.it/publications/2021/ABDDM21/) publications web page.
 
 **Table of Contents:**
 - [Requirements](#requirements)
