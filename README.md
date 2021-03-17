@@ -1,4 +1,8 @@
-Official github repository.
+# MSAP: Multi-Step Adversarial Perturbations on Recommender Systems Embeddings
+
+GitHub repository of the FLAIRS2021 paper: MSAP: Multi-Step Adversarial Perturbations on Recommender Systems Embeddings, published by Vito Walter Anelli, Alejandro Bellogín, Yashar Deldjoo, Tommaso Di Noia, and Felice Antonio Merra.
+
+Paper available at [Sisinflab](http://sisinflab.poliba.it/publications/2021) publications web page.
 
 **Table of Contents:**
 - [Requirements](#requirements)
@@ -62,3 +66,12 @@ where ```attack_type``` can be ```[fgsm, bim, pgd]```, ```attack_eps``` is the b
 ### 4. Recommendation Evaluation
 
 The attack results are store as recommendation lists under the directory ```./rec_results/<dataset_name>/<model_name>/file_name.tsv```. Each result file can be evaluated with different evaluation frameworks.
+
+## Authors Team
+* Vito Walter Anelli (vitowalter.anelli@poliba.it)
+* Alejandro Bellogín (alejandro.bellogin@uam.es)
+* Yashar Deldjoo (yashar.deldjoo@poliba.it)
+* Tommaso Di Noia (tommaso.dinoia@poliba.it)
+* Felice Antonio Merra<sup id="a1">[*](#f1)</sup> (felice.merra@poliba.it) 
+
+<b id="f1"><sup>*</sup></b> Corresponding author
